@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-/* ── Vercel serverless config ── */
-export const maxDuration = 10;
+/* ── Edge Runtime — se ejecuta en Bogotá (bog1), IP colombiana ── */
+export const runtime = 'edge';
+export const preferredRegion = ['bog1', 'gru1'];
 export const dynamic = 'force-dynamic';
 
-/**
- * All strategies race in PARALLEL — first successful response wins.
- * Global 8 s deadline so the function never exceeds Vercel's 10 s limit.
- */
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 export async function GET(req: NextRequest) {
   const guia = req.nextUrl.searchParams.get('guia')?.trim();
@@ -20,19 +18,19 @@ export async function GET(req: NextRequest) {
   }
 
   const ac = new AbortController();
-  const globalTimer = setTimeout(() => ac.abort(), 8_000);
+  const timer = setTimeout(() => ac.abort(), 14_000); // Edge allows 25s+
 
   try {
+    // Race all strategies — first success wins
     const result = await Promise.any([
       mobileGet(guia, ac.signal),
       mobilePost(guia, ac.signal),
       asmxPost(guia, ac.signal),
-      webPortal(guia, ac.signal),
     ]);
-    clearTimeout(globalTimer);
+    clearTimeout(timer);
     return NextResponse.json(result);
   } catch {
-    clearTimeout(globalTimer);
+    clearTimeout(timer);
     return NextResponse.json(
       { error: 'No se pudo consultar la guía en Servientrega. Intenta de nuevo más tarde.' },
       { status: 502 },
@@ -42,17 +40,16 @@ export async function GET(req: NextRequest) {
 
 /* ═══════════════════════════  STRATEGIES  ═══════════════════════════ */
 
-/** Strategy 1 · mobile.servientrega.com GET */
+/** Strategy 1 · mobile GET — same as Oklahoma backend httpsGetJSON */
 async function mobileGet(guia: string, signal: AbortSignal) {
   const r = await fetch(
     `https://mobile.servientrega.com/Services/ShipmentTracking/api/envio/${guia}/1/es`,
     {
       headers: {
-        'User-Agent': UA_MOBILE,
+        'User-Agent': UA,
         Accept: 'application/json, text/plain, */*',
         'Accept-Language': 'es-CO,es;q=0.9',
         Referer: 'https://mobile.servientrega.com/WebSitePortal/RastreoEnvioDetalle.html',
-        Origin: 'https://mobile.servientrega.com',
       },
       signal,
     },
@@ -60,25 +57,25 @@ async function mobileGet(guia: string, signal: AbortSignal) {
   if (!r.ok) throw new Error(`mobile-GET ${r.status}`);
   const d = await r.json();
   if (d && (d.movimientos || d.estadoActual || d.numeroGuia)) {
-    console.log('[Tracking] ✓ mobile-GET');
+    console.log('[Tracking] ✓ mobile-GET (edge)');
     return formatResult(d, guia);
   }
   throw new Error('mobile-GET empty');
 }
 
-/** Strategy 2 · mobile.servientrega.com POST */
+/** Strategy 2 · mobile POST ControlRastreovalidaciones — same as Oklahoma */
 async function mobilePost(guia: string, signal: AbortSignal) {
   const r = await fetch(
     'https://mobile.servientrega.com/Services/ShipmentTracking/api/ControlRastreovalidaciones',
     {
       method: 'POST',
       headers: {
-        'User-Agent': UA_MOBILE,
+        'User-Agent': UA,
         Accept: 'application/json, text/plain, */*',
         'Accept-Language': 'es-CO,es;q=0.9',
-        Referer: 'https://mobile.servientrega.com/WebSitePortal/RastreoEnvioDetalle.html',
-        Origin: 'https://mobile.servientrega.com',
         'Content-Type': 'application/json',
+        Origin: 'https://mobile.servientrega.com',
+        Referer: 'https://mobile.servientrega.com/WebSitePortal/RastreoEnvioDetalle.html',
       },
       body: JSON.stringify({
         numeroGuia: guia,
@@ -94,11 +91,10 @@ async function mobilePost(guia: string, signal: AbortSignal) {
   if (!r.ok) throw new Error(`mobile-POST ${r.status}`);
   const d = await r.json();
   if (d.Code === 1 && d.ValidationNumber === 4 && d.Results?.[0]) {
-    console.log('[Tracking] ✓ mobile-POST');
+    console.log('[Tracking] ✓ mobile-POST (edge)');
     return formatResult(d.Results[0], guia);
   }
   if (d && (d.movimientos || d.estadoActual)) {
-    console.log('[Tracking] ✓ mobile-POST (direct)');
     return formatResult(d, guia);
   }
   throw new Error('mobile-POST empty');
@@ -121,7 +117,7 @@ async function asmxPost(guia: string, signal: AbortSignal) {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
         Accept: 'application/json, text/javascript, */*; q=0.01',
-        'User-Agent': UA_DESKTOP,
+        'User-Agent': UA,
         Referer: 'https://web.servientrega.com/RastreoEnvios/RastreoEnvioDetalle.html',
         Origin: 'https://web.servientrega.com',
         'X-Requested-With': 'XMLHttpRequest',
@@ -136,62 +132,13 @@ async function asmxPost(guia: string, signal: AbortSignal) {
   const parsed = typeof json.d === 'string' ? JSON.parse(json.d) : json.d ?? json;
   if (parsed && (parsed.movimientos || parsed.estadoActual || parsed.Results)) {
     const inner = (parsed.Results as Array<Record<string, unknown>>)?.[0] ?? parsed;
-    console.log('[Tracking] ✓ ASMX');
+    console.log('[Tracking] ✓ ASMX (edge)');
     return formatResult(inner as Record<string, unknown>, guia);
   }
   throw new Error('ASMX empty');
 }
 
-/** Strategy 4 · www.servientrega.com portal API (different infra, less likely to geo-block) */
-async function webPortal(guia: string, signal: AbortSignal) {
-  // The main website uses this endpoint publicly
-  const r = await fetch(
-    'https://www.servientrega.com/wps/portal/rastreo-envio/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8zi_YO8nQ093Q0N3C3cDAwCPd09g7w9vAwMDEz0wwkpiAJKG-AAjgb6BbmhigBClBEM/p0/IZ7_9DMSG4Q14HN7E0Q5J7QN2C0G95=CZ6_9DMSG4Q14HN7E0Q5J7QN2C0GH4=NJrastrearEnvio=/' ,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': UA_DESKTOP,
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        Referer: 'https://www.servientrega.com/wps/portal/rastreo-envio/',
-      },
-      body: `guia=${guia}`,
-      signal,
-    },
-  );
-  if (!r.ok) throw new Error(`portal ${r.status}`);
-  const html = await r.text();
-
-  // Parse tracking info from the HTML response
-  const estadoMatch = html.match(/estado[^>]*>([^<]+)</i);
-  const estado = estadoMatch?.[1]?.trim();
-  if (!estado) throw new Error('portal no-data');
-
-  console.log('[Tracking] ✓ web-portal');
-
-  // Extract origin/destination from HTML if available
-  const origenMatch = html.match(/origen[^>]*>([^<]+)</i);
-  const destinoMatch = html.match(/destino[^>]*>([^<]+)</i);
-
-  return {
-    exito: true,
-    guia,
-    estado,
-    origen: origenMatch?.[1]?.trim() || null,
-    destino: destinoMatch?.[1]?.trim() || null,
-    fechaEnvio: null,
-    fechaEntrega: null,
-    primerosMovimientos: [],
-    totalMovimientos: 0,
-  };
-}
-
 /* ═══════════════════════════  HELPERS  ═══════════════════════════ */
-
-const UA_MOBILE =
-  'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36';
-const UA_DESKTOP =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 function formatResult(data: Record<string, unknown>, guia: string) {
   const movimientos =
