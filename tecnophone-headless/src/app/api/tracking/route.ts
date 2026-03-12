@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 /* ── Edge Runtime — se ejecuta en Bogotá (bog1), IP colombiana ── */
 export const runtime = 'edge';
-export const preferredRegion = ['bog1', 'gru1'];
+export const preferredRegion = ['gru1'];
 export const dynamic = 'force-dynamic';
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
