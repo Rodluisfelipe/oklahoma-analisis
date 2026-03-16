@@ -23,7 +23,6 @@ const nextConfig = {
   reactStrictMode: true,
   experimental: {
     optimizePackageImports: ['lucide-react'],
-    optimizeCss: true,
   },
   async headers() {
     return [

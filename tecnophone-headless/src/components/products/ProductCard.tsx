@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingCart, Star, Zap, Check, Truck, Plus } from 'lucide-react';
+import { ShoppingCart, Star, Zap, Check, Truck } from 'lucide-react';
 import { WCProduct } from '@/types/woocommerce';
 import { formatPrice, calculateDiscount } from '@/lib/woocommerce';
 import { useCartStore } from '@/store/cart';
 import { cn } from '@/lib/utils';
 import { toast } from '@/lib/toast';
+import DeliveryBadge from './DeliveryBadge';
 
 interface ProductCardProps {
   product: WCProduct;
@@ -25,6 +26,8 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   const price = parseFloat(product.price);
   const monthlyPrice = price > 0 ? Math.round(price / 12) : 0;
   const hasFreeShipping = price >= FREE_SHIPPING_THRESHOLD;
+  const isFull = product.categories?.some((c) => c.slug === 'full');
+  const displayCategory = product.categories?.find((c) => !['full', 'sin-categorizar', 'uncategorized'].includes(c.slug));
 
   const handleAddToCart = (e?: React.MouseEvent) => {
     if (e) { e.preventDefault(); e.stopPropagation(); }
@@ -44,7 +47,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
         'animate-fade-in-up opacity-0'
       )}
       style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'forwards' }}
-    >\n      {/* Image Container */}
+    >   {/* Image Container */}
       <Link href={`/producto/${product.slug}`} className="block relative aspect-square overflow-hidden bg-surface-50">
         {product.images?.[0] ? (
           <>
@@ -122,32 +125,6 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
             </button>
           )}
         </div>
-
-        {/* Mobile floating quick-add button */}
-        {product.stock_status !== 'outofstock' && (
-          product.type === 'external' && product.external_url ? (
-            <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(product.external_url, '_blank', 'noopener,noreferrer'); }}
-              aria-label={product.button_text || 'Comprar producto'}
-              className="absolute bottom-2 right-2 w-9 h-9 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 active:scale-90 z-10 lg:hidden bg-primary-600 text-white"
-            >
-              <Plus className="w-4 h-4" strokeWidth={2.5} />
-            </button>
-          ) : (
-            <button
-              onClick={handleAddToCart}
-              aria-label="Agregar al carrito"
-              className={cn(
-                'absolute bottom-2 right-2 w-9 h-9 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 active:scale-90 z-10 lg:hidden',
-                justAdded
-                  ? 'bg-emerald-500 text-white'
-                  : 'bg-primary-600 text-white'
-              )}
-            >
-              {justAdded ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" strokeWidth={2.5} />}
-            </button>
-          )
-        )}
       </Link>
 
       {/* Info */}
@@ -175,9 +152,9 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
 
         {/* Category tag */}
         <div className="mb-2 h-5">
-          {product.categories?.length > 0 && (
+          {displayCategory && (
               <span className="inline-block text-[11px] font-bold text-primary-600 bg-primary-50 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-              {product.categories[0].name}
+              {displayCategory.name}
             </span>
           )}
         </div>
@@ -232,13 +209,15 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
               o desde <span className="text-surface-800 font-semibold">{formatPrice(monthlyPrice)}</span>/mes x 12
             </p>
           )}
-          {/* Free shipping indicator */}
-          {hasFreeShipping && (
+          {/* Shipping: full products get dynamic delivery badge, others get static envío gratis */}
+          {isFull ? (
+            <DeliveryBadge categories={product.categories} variant="card" />
+          ) : hasFreeShipping ? (
             <div className="flex items-center gap-1 text-emerald-600">
               <Truck className="w-3 h-3" />
               <span className="text-[11px] font-semibold">Envío gratis</span>
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Add to cart / External link button */}

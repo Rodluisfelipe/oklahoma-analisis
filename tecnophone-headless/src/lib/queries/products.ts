@@ -316,7 +316,7 @@ export const PRODUCT_CARD_FIELDS_SIMPLE = `
       sourceUrl
       altText
     }
-    productCategories(first: 1) {
+    productCategories(first: 5) {
       nodes {
         databaseId
         name
@@ -343,7 +343,7 @@ export const PRODUCT_CARD_FIELDS_VARIABLE = `
       sourceUrl
       altText
     }
-    productCategories(first: 1) {
+    productCategories(first: 5) {
       nodes {
         databaseId
         name
@@ -371,7 +371,7 @@ export const PRODUCT_CARD_FIELDS_EXTERNAL = `
       sourceUrl
       altText
     }
-    productCategories(first: 1) {
+    productCategories(first: 5) {
       nodes {
         databaseId
         name

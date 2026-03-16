@@ -36,6 +36,7 @@ import ProductCard from '@/components/products/ProductCard';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { toast } from '@/lib/toast';
+import DeliveryBadge from '@/components/products/DeliveryBadge';
 
 interface Props {
   product: WCProduct;
@@ -59,6 +60,8 @@ export default function ProductDetail({ product, relatedProducts }: Props) {
   const price = parseFloat(product.price);
   const monthlyPrice = price > 0 ? Math.round(price / 12) : 0;
   const inStock = product.stock_status !== 'outofstock';
+  const isFull = product.categories?.some((c) => c.slug === 'full');
+  const displayCategory = product.categories?.find((c) => !['full', 'sin-categorizar', 'uncategorized'].includes(c.slug));
 
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) {
@@ -128,8 +131,8 @@ export default function ProductDetail({ product, relatedProducts }: Props) {
     description: shortDescText || product.name,
     image: product.images.map((img) => img.src),
     sku: product.sku || undefined,
-    brand: product.categories[0]
-      ? { '@type': 'Brand', name: product.categories[0].name }
+    brand: displayCategory
+      ? { '@type': 'Brand', name: displayCategory.name }
       : undefined,
     offers: {
       '@type': 'Offer',
@@ -169,13 +172,13 @@ export default function ProductDetail({ product, relatedProducts }: Props) {
         name: 'Productos',
         item: 'https://www.tecnophone.co/productos',
       },
-      ...(product.categories[0]
+      ...(displayCategory
         ? [
             {
               '@type': 'ListItem',
               position: 3,
-              name: product.categories[0].name,
-              item: `https://www.tecnophone.co/categoria/${product.categories[0].slug}`,
+              name: displayCategory.name,
+              item: `https://www.tecnophone.co/categoria/${displayCategory.slug}`,
             },
             {
               '@type': 'ListItem',
@@ -211,11 +214,11 @@ export default function ProductDetail({ product, relatedProducts }: Props) {
           <Link href="/" className="hover:text-primary-600 transition-colors font-medium">Inicio</Link>
           <ChevronRight className="w-3.5 h-3.5" />
           <Link href="/productos" className="hover:text-primary-600 transition-colors font-medium">Productos</Link>
-          {product.categories[0] && (
+          {displayCategory && (
             <>
               <ChevronRight className="w-3.5 h-3.5" />
-              <Link href={`/categoria/${product.categories[0].slug}`} className="hover:text-primary-600 transition-colors font-medium">
-                {product.categories[0].name}
+              <Link href={`/categoria/${displayCategory.slug}`} className="hover:text-primary-600 transition-colors font-medium">
+                {displayCategory.name}
               </Link>
             </>
           )}
@@ -515,13 +518,17 @@ export default function ProductDetail({ product, relatedProducts }: Props) {
             ) : null}
 
             {/* Shipping info banner */}
-            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-start gap-3">
-              <Truck className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-bold text-emerald-600">{deliveryText}</p>
-                <p className="text-xs text-emerald-500/80 mt-0.5">* Solo aplica para ciudades principales. Ciudades secundarias y municipios hasta 5 días.</p>
+            {isFull ? (
+              <DeliveryBadge categories={product.categories} variant="detail" />
+            ) : (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-start gap-3">
+                <Truck className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-bold text-emerald-600">{deliveryText}</p>
+                  <p className="text-xs text-emerald-500/80 mt-0.5">* Solo aplica para ciudades principales. Ciudades secundarias y municipios hasta 5 días.</p>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Trust badges grid */}
             <div className="grid grid-cols-2 gap-3">

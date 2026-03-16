@@ -47,9 +47,10 @@ export default async function ProductoPage({ params }: Props) {
 
   // Fetch related products in parallel — no sequential waterfall
   let relatedProducts: WCProduct[] = [];
-  if (product.categories.length > 0) {
+  const relatedCat = product.categories.find((c) => !['full', 'sin-categorizar', 'uncategorized'].includes(c.slug));
+  if (relatedCat) {
     const result = await getProducts({
-      category: product.categories[0].id,
+      category: relatedCat.id,
       per_page: 5,
     });
     relatedProducts = result.products.filter((p) => p.id !== product.id).slice(0, 4);

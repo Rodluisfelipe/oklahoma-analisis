@@ -125,10 +125,14 @@ export default function Navbar() {
             {/* ===== MOBILE HEADER ===== */}
             <div className="lg:hidden flex items-center gap-2 py-2">
               <Link href="/" className="flex-shrink-0">
-                <span className="text-lg font-black tracking-tight font-display">
-                  <span className="text-primary-600">T</span>
-                  <span className="text-gray-900">p</span>
-                </span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/icons/logo-mobile.webp"
+                  alt="TecnoPhone"
+                  width={36}
+                  height={36}
+                  className="w-9 h-9"
+                />
               </Link>
               <div className="flex-1 min-w-0">
                 <SearchTrigger />
