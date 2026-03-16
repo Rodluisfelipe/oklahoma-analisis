@@ -238,6 +238,20 @@ export async function searchProducts(query: string, limit = 10): Promise<WCProdu
   return products;
 }
 
+/** Search with full product details (description, gallery, attributes). Used by AI chat. */
+export async function searchProductsDetailed(query: string, limit = 8): Promise<WCProduct[]> {
+  const variables: Record<string, unknown> = { first: limit, search: query };
+  const cacheKey = `search_detailed_${query}_${limit}`;
+  const cached = getCached<WCProduct[]>(cacheKey);
+  if (cached) return cached;
+
+  const data = await graphqlFetch<GQLProductsResponse>(PRODUCTS_QUERY, variables, 900);
+  const products = data.products.nodes.map(mapGraphQLProduct);
+  await enrichProductsWithBrands(products);
+  setCache(cacheKey, products, 300);
+  return products;
+}
+
 // ============ PRODUCT TAGS (BRANDS) ============
 
 export async function getProductTags(params: {

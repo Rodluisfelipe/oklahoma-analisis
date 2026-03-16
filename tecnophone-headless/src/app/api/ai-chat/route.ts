@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { searchProducts } from '@/lib/woocommerce';
+import { searchProductsDetailed } from '@/lib/woocommerce';
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
@@ -82,53 +82,74 @@ export async function POST(request: NextRequest) {
     const searchQuery = keywords || message;
 
     // Search products - try with keywords first, fallback to individual words
-    let products = await searchProducts(searchQuery, 8);
+    let products = await searchProductsDetailed(searchQuery, 8);
 
     // If no results with combined keywords, try individual keywords
     if (products.length === 0 && keywords.includes(' ')) {
       const individualWords = keywords.split(' ');
       for (const word of individualWords) {
         if (word.length >= 3) {
-          products = await searchProducts(word, 8);
+          products = await searchProductsDetailed(word, 8);
           if (products.length > 0) break;
         }
       }
     }
 
-    // Build product catalog context
+    // Build product catalog context — include full description for specs questions
+    const stripHtml = (html: string) => html?.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim() || '';
+
     const catalogContext = products.length > 0
-      ? products.map((p) => ({
-          name: p.name,
-          slug: p.slug,
-          price: p.price,
-          regular_price: p.regular_price,
-          sale_price: p.sale_price,
-          on_sale: p.on_sale,
-          stock_status: p.stock_status,
-          image: p.images?.[0]?.src || '',
-          short_description: p.short_description?.replace(/<[^>]*>/g, '').slice(0, 500) || '',
-          brand: p.brand?.name || '',
-        }))
+      ? products.map((p) => {
+          const shortDesc = stripHtml(p.short_description).slice(0, 500);
+          const longDesc = stripHtml(p.description).slice(0, 1500);
+          // Merge: use longDesc if it has substantially more info
+          const fullSpecs = longDesc.length > shortDesc.length + 50 ? longDesc : shortDesc;
+
+          return {
+            name: p.name,
+            slug: p.slug,
+            price: p.price,
+            regular_price: p.regular_price,
+            sale_price: p.sale_price,
+            on_sale: p.on_sale,
+            stock_status: p.stock_status,
+            image: p.images?.[0]?.src || '',
+            brand: p.brand?.name || '',
+            categories: (p.categories || []).map((c) => c.name).filter(Boolean).join(', '),
+            specs: fullSpecs,
+          };
+        })
       : [];
 
-    const systemPrompt = `Eres "Tecno", el asistente virtual de TecnoPhone, tienda de tecnología en Chía, Colombia. Eres amigable y servicial. Respondes SIEMPRE en español.
+    const systemPrompt = `Eres "Tecno", el asistente virtual de TecnoPhone, tienda de tecnología en Chía, Colombia. Eres amigable, experto en tecnología y servicial. Respondes SIEMPRE en español.
+
+INFORMACIÓN DE LA TIENDA:
+- Ubicación: Chía, Cundinamarca, Colombia
+- WhatsApp: +57 313 229 4533
+- Envío gratis en compras desde $500.000
+- Envío a todo Colombia (1-3 días hábiles, Bogotá puede ser mismo día)
+- Métodos de pago: Transferencia bancaria, MercadoPago
+- Garantía oficial en todos los productos
 
 CATÁLOGO DISPONIBLE (${catalogContext.length} productos encontrados):
 ${catalogContext.length > 0 ? JSON.stringify(catalogContext, null, 2) : 'No se encontraron productos. Sugiere al usuario buscar con otras palabras como: portátil, monitor, celular, tablet, auriculares, teclado, mouse, impresora, etc.'}
 
 REGLAS:
-1. Responde SIEMPRE en español, sé conciso (2-3 oraciones máximo + sugerencias)
-2. Usa emojis ocasionalmente para ser amigable
-3. Si hay productos en el catálogo, SIEMPRE sugiere los más relevantes usando sus slugs exactos, incluso si no cumplen todos los criterios subjetivos del usuario (como "barato" o "gamer"), pero menciónalo amablemente.
-4. Si NO hay productos en absoluto, sugiere al usuario buscar con palabras clave específicas del producto (ej: "portátil", "monitor", "celular")
-5. Menciona nombre, precio y si tiene descuento al sugerir
-6. NUNCA inventes productos que no estén en el catálogo
-7. NUNCA devuelvas slugs duplicados.
+1. Responde SIEMPRE en español. Sé conciso pero informativo.
+2. Usa emojis ocasionalmente para ser amigable 😊
+3. Si el usuario pregunta por ESPECIFICACIONES, CARACTERÍSTICAS, DETALLES TÉCNICOS o FICHA TÉCNICA de un producto: usa el campo "specs" del catálogo para dar información detallada (procesador, RAM, almacenamiento, pantalla, batería, etc.). Sé específico con los datos técnicos.
+4. Si el usuario pregunta de forma general ("busco un portátil", "muéstrame celulares"): menciona nombre, precio, y si tiene descuento. Sé breve (2-3 oraciones + sugerencias).
+5. Si hay productos en el catálogo, SIEMPRE sugiere los más relevantes usando sus slugs exactos.
+6. Si NO hay productos, sugiere al usuario buscar con palabras clave específicas.
+7. NUNCA inventes productos, precios ni especificaciones que no estén en el catálogo.
+8. NUNCA devuelvas slugs duplicados.
+9. Si el usuario pregunta por envío, pagos, garantía o información de la tienda, responde con la información de arriba.
+10. Si el usuario compara productos, usa los specs para hacer una comparación útil.
 
 FORMATO (JSON estricto, sin markdown):
 {"reply": "tu respuesta", "suggestedSlugs": ["slug-1", "slug-2"]}
 
-suggestedSlugs: array con slugs EXACTOS del catálogo (máx 4). Array vacío si no hay productos.`;
+suggestedSlugs: array con slugs EXACTOS del catálogo (máx 4). Array vacío si no hay productos relevantes.`;
 
     // Build messages array with history (last 6 messages)
     const messages: ChatMessage[] = [
