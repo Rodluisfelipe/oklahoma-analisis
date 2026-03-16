@@ -161,13 +161,12 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
           {product.brand && (
             <>
               {product.brand.image ? (
-                <img
+                <Image
                   src={product.brand.image.src}
                   alt={product.brand.name}
                   width={64}
                   height={16}
                   className="h-4 w-auto object-contain opacity-60 grayscale"
-                  loading="lazy"
                 />
               ) : (
                 <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
@@ -260,7 +259,6 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
             )}
           >
             {product.external_url.toLowerCase().includes('mercadolibre') ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <Image src="/mercadolibre-logo.png" alt="MercadoLibre" width={20} height={20} className="w-5 h-5 flex-shrink-0 rounded" />
             ) : product.external_url.toLowerCase().includes('falabella') ? (
               <svg viewBox="0 0 400 400" className="w-5 h-5 flex-shrink-0">

@@ -392,7 +392,7 @@ export default async function HomePage() {
 
       {/* ===== PRODUCT OF THE DAY ===== */}
       {pddProduct && (
-        <section className="py-6 lg:py-16 bg-surface-50 border-y border-surface-200">
+        <section className="py-6 lg:py-16 bg-surface-50 border-y border-surface-200" style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 500px' }}>
           <div className="px-4 sm:px-6 lg:px-8 max-w-[1800px] mx-auto">
             <div className="flex items-center gap-2.5 lg:gap-3 mb-5 lg:mb-8">
               <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-amber-100 flex items-center justify-center">
@@ -507,7 +507,7 @@ export default async function HomePage() {
       })()}
 
       {/* ===== STATS / INVENTORY BANNER ===== */}
-      <section className="bg-surface-50 py-12 lg:py-16 relative overflow-hidden border-y border-surface-200">
+      <section className="bg-surface-50 py-12 lg:py-16 relative overflow-hidden border-y border-surface-200" style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 300px' }}>
         <div className="px-4 sm:px-6 lg:px-8 max-w-[1800px] mx-auto relative z-10">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 text-center">
             {[
@@ -535,7 +535,7 @@ export default async function HomePage() {
 
       {/* ===== SALE PRODUCTS ===== */}
       {saleProducts.length > 0 && (
-        <section className="py-6 lg:py-16 bg-white">
+        <section className="py-6 lg:py-16 bg-white" style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 800px' }}>
           <div className="px-4 sm:px-6 lg:px-8 max-w-[1800px] mx-auto">
             <div className="flex items-end justify-between mb-5 lg:mb-8">
               <div>
@@ -578,7 +578,7 @@ export default async function HomePage() {
 
       {/* ===== BRANDS BAR ===== */}
       {brands.length > 0 && (
-        <section className="py-10 lg:py-14 bg-surface-50 border-y border-surface-200">
+        <section className="py-10 lg:py-14 bg-surface-50 border-y border-surface-200" style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 200px' }}>
           <div className="px-4 sm:px-6 lg:px-8 max-w-[1800px] mx-auto text-center mb-6">
             <h2 className="text-xl lg:text-2xl font-extrabold text-gray-900">Marcas Oficiales</h2>
           </div>
@@ -608,7 +608,7 @@ export default async function HomePage() {
       )}
 
       {/* ===== CTA / WHATSAPP BANNER ===== */}
-      <section className="bg-gradient-to-br from-primary-600 via-primary-500 to-blue-600 py-12 lg:py-16 relative overflow-hidden">
+      <section className="bg-gradient-to-br from-primary-600 via-primary-500 to-blue-600 py-12 lg:py-16 relative overflow-hidden" style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 300px' }}>
         {/* Deco */}
         <div className="absolute -left-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
         <div className="absolute -right-10 -bottom-10 w-60 h-60 bg-white/5 rounded-full blur-3xl" />
