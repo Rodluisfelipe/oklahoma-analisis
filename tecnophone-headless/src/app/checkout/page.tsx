@@ -20,17 +20,20 @@ import {
   CreditCard,
   ArrowLeft,
   CheckCircle,
+  Banknote,
 } from 'lucide-react';
 import { useCartStore } from '@/store/cart';
 import { formatPrice } from '@/lib/woocommerce';
 import PaymentBrick from '@/components/checkout/PaymentBrick';
 
 type CheckoutStep = 'info' | 'payment';
+type PaymentMethod = 'mercadopago' | 'bacs';
 
 interface OrderData {
   order_id: number;
   order_key: string;
   total: string;
+  payment_method: string;
 }
 
 const colombianDepartments = [
@@ -49,6 +52,8 @@ export default function CheckoutPage() {
   const [error, setError] = useState('');
   const [step, setStep] = useState<CheckoutStep>('info');
   const [orderData, setOrderData] = useState<OrderData | null>(null);
+  const mpEnabled = !!process.env.NEXT_PUBLIC_MP_PUBLIC_KEY;
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('bacs');
 
   const [form, setForm] = useState({
     first_name: '',
@@ -157,6 +162,7 @@ export default function CheckoutPage() {
             ...(item.variationId ? { variation_id: item.variationId } : {}),
           })),
           customer_note: form.note,
+          payment_method: paymentMethod,
         }),
       });
 
@@ -173,7 +179,18 @@ export default function CheckoutPage() {
         order_id: data.order_id,
         order_key: data.order_key,
         total: data.total,
+        payment_method: data.payment_method,
       });
+
+      // BACS: skip payment brick, go straight to thank you
+      if (paymentMethod === 'bacs') {
+        clearCart();
+        router.push(
+          `/checkout/gracias?order_id=${data.order_id}&method=bacs`
+        );
+        return;
+      }
+
       setStep('payment');
       setLoading(false);
     } catch {
@@ -389,6 +406,71 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
+              {/* Payment Method */}
+              <div className="bg-surface-100 rounded-2xl border border-surface-200 p-6">
+                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-5">
+                  <CreditCard className="w-5 h-5 text-primary-600" />
+                  Método de Pago
+                </h2>
+                <div className="space-y-3">
+                  <label
+                    className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      paymentMethod === 'bacs'
+                        ? 'border-primary-500 bg-primary-50'
+                        : 'border-surface-200 bg-white hover:border-surface-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="payment_method"
+                      value="bacs"
+                      checked={paymentMethod === 'bacs'}
+                      onChange={() => setPaymentMethod('bacs')}
+                      className="sr-only"
+                    />
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                      paymentMethod === 'bacs' ? 'border-primary-500' : 'border-surface-400'
+                    }`}>
+                      {paymentMethod === 'bacs' && <div className="w-2.5 h-2.5 rounded-full bg-primary-500" />}
+                    </div>
+                    <Banknote className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-gray-900">Transferencia o consignación bancaria directa</p>
+                      <p className="text-xs text-surface-600">Realiza tu pago directamente en nuestra cuenta bancaria</p>
+                    </div>
+                  </label>
+
+                  {mpEnabled && (
+                  <label
+                    className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      paymentMethod === 'mercadopago'
+                        ? 'border-primary-500 bg-primary-50'
+                        : 'border-surface-200 bg-white hover:border-surface-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="payment_method"
+                      value="mercadopago"
+                      checked={paymentMethod === 'mercadopago'}
+                      onChange={() => setPaymentMethod('mercadopago')}
+                      className="sr-only"
+                    />
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                      paymentMethod === 'mercadopago' ? 'border-primary-500' : 'border-surface-400'
+                    }`}>
+                      {paymentMethod === 'mercadopago' && <div className="w-2.5 h-2.5 rounded-full bg-primary-500" />}
+                    </div>
+                    <CreditCard className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-gray-900">MercadoPago</p>
+                      <p className="text-xs text-surface-600">Tarjeta de crédito, débito, PSE y más</p>
+                    </div>
+                  </label>
+                  )}
+                </div>
+              </div>
+
               {/* Notes */}
               <div className="bg-surface-100 rounded-2xl border border-surface-200 p-6">
                 <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-5">
@@ -408,7 +490,7 @@ export default function CheckoutPage() {
                 </>
               )}
 
-              {step === 'payment' && orderData && (
+              {step === 'payment' && orderData && mpEnabled && (
                 <>
                   {/* Back button */}
                   <button
@@ -539,6 +621,11 @@ export default function CheckoutPage() {
                           <Loader2 className="w-5 h-5 animate-spin" />
                           Creando pedido...
                         </>
+                      ) : paymentMethod === 'bacs' ? (
+                        <>
+                          <Banknote className="w-4 h-4" />
+                          Confirmar Pedido
+                        </>
                       ) : (
                         <>
                           <CreditCard className="w-4 h-4" />
@@ -557,7 +644,9 @@ export default function CheckoutPage() {
                         </span>
                       </div>
                         <p className="text-xs text-center text-surface-600">
-                        Procesado de forma segura por MercadoPago. No almacenamos tus datos de pago.
+                        {paymentMethod === 'bacs'
+                          ? 'Usa el número del pedido como referencia de pago. Tu pedido se procesará al confirmar el pago.'
+                          : 'Procesado de forma segura por MercadoPago. No almacenamos tus datos de pago.'}
                       </p>
                     </div>
                   </>

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback, FormEvent } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useChatStore } from '@/store/chat';
+import { useCartStore } from '@/store/cart';
 
 interface ProductSuggestion {
   name: string;
@@ -156,6 +157,7 @@ function ProductCard({ product }: { product: ProductSuggestion }) {
 /* ─── Main Component ─── */
 export default function AiChatBubble() {
   const { isOpen, openChat, closeChat } = useChatStore();
+  const cartOpen = useCartStore((s) => s.isOpen);
   const [messages, setMessages] = useState<Message[]>([GREETING]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -318,7 +320,7 @@ export default function AiChatBubble() {
       {!isOpen && (
         <button
           onClick={openChat}
-          className="fixed hidden lg:block bottom-6 right-6 z-50 min-h-0 mascot-bounce group"
+          className={`fixed hidden lg:block bottom-6 z-50 min-h-0 mascot-bounce group transition-all duration-500 ${cartOpen ? 'right-[calc(32rem+1.5rem)]' : 'right-6'}`}
           aria-label="Abrir asistente de TecnoPhone"
         >
           <div className="relative">

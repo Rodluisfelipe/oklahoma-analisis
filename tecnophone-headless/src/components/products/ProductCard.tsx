@@ -8,7 +8,6 @@ import { WCProduct } from '@/types/woocommerce';
 import { formatPrice, calculateDiscount } from '@/lib/woocommerce';
 import { useCartStore } from '@/store/cart';
 import { cn } from '@/lib/utils';
-import { toast } from '@/lib/toast';
 import DeliveryBadge from './DeliveryBadge';
 
 interface ProductCardProps {
@@ -34,9 +33,6 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
     if (product.stock_status === 'outofstock') return;
     addItem(product);
     setJustAdded(true);
-    toast.success(`${product.name} agregado al carrito`, {
-      description: hasFreeShipping ? '🚚 Incluye envío gratis' : undefined,
-    });
     setTimeout(() => setJustAdded(false), 1800);
   };
 

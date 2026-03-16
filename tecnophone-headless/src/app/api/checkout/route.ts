@@ -31,6 +31,7 @@ interface CheckoutBody {
   };
   line_items: LineItem[];
   customer_note?: string;
+  payment_method?: 'mercadopago' | 'bacs';
 }
 
 export async function POST(request: NextRequest) {
@@ -50,12 +51,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Faltan datos de facturación' }, { status: 400 });
     }
 
+    // Determine payment method
+    const isBacs = body.payment_method === 'bacs';
+
     // Create WooCommerce order via REST API
     const orderData = {
-      payment_method: 'woo-mercado-pago-basic',
-      payment_method_title: 'MercadoPago',
+      payment_method: isBacs ? 'bacs' : 'woo-mercado-pago-basic',
+      payment_method_title: isBacs ? 'Transferencia Bancaria' : 'MercadoPago',
       set_paid: false,
-      status: 'pending',
+      status: isBacs ? 'on-hold' : 'pending',
       billing: {
         ...body.billing,
         country: body.billing.country || 'CO',
@@ -102,6 +106,7 @@ export async function POST(request: NextRequest) {
       order_id: order.id,
       order_key: order.order_key,
       total: order.total,
+      payment_method: isBacs ? 'bacs' : 'mercadopago',
     });
   } catch (error) {
     console.error('[Checkout] Error:', error);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { Search, X, Loader2, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -35,7 +35,11 @@ function formatPrice(price: string | number): string {
   return `$ ${Math.round(num).toLocaleString('es-CO')}`;
 }
 
-export default function InstantSearch() {
+export interface InstantSearchHandle {
+  focus: () => void;
+}
+
+const InstantSearch = forwardRef<InstantSearchHandle>(function InstantSearch(_props, ref) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchHit[]>([]);
   const [total, setTotal] = useState(0);
@@ -47,6 +51,10 @@ export default function InstantSearch() {
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const abortRef = useRef<AbortController>();
   const router = useRouter();
+
+  useImperativeHandle(ref, () => ({
+    focus: () => inputRef.current?.focus(),
+  }));
 
   // Debounced search
   const doSearch = useCallback(async (q: string) => {
@@ -263,4 +271,6 @@ export default function InstantSearch() {
       )}
     </div>
   );
-}
+});
+
+export default InstantSearch;

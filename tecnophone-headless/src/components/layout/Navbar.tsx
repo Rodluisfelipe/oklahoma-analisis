@@ -3,10 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
-  Search,
   ShoppingCart,
-  Menu,
-  X,
   ChevronDown,
   Laptop,
   Smartphone,
@@ -16,14 +13,13 @@ import {
   ShoppingBag,
   Zap,
   User,
-  Command,
   Truck,
 } from 'lucide-react';
 import { useCartStore } from '@/store/cart';
 import { cn } from '@/lib/utils';
-import CommandSearch from '@/components/search/CommandSearch';
 import TrackingModal from '@/components/tracking/TrackingModal';
 import SearchTrigger from '@/components/home/SearchTrigger';
+import InstantSearch, { type InstantSearchHandle } from '@/components/search/InstantSearch';
 
 const categories = [
   { name: 'Portátiles', slug: 'portatiles-2', icon: Laptop, desc: 'HP, Dell, Lenovo y más' },
@@ -45,9 +41,9 @@ export default function Navbar() {
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [cmdOpen, setCmdOpen] = useState(false);
   const [trackingOpen, setTrackingOpen] = useState(false);
   const categoriesRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<InstantSearchHandle>(null);
   const totalItems = useCartStore((s) => s.totalItems());
   const openCart = useCartStore((s) => s.openCart);
 
@@ -72,12 +68,12 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Cmd+K / Ctrl+K shortcut
+  // Cmd+K / Ctrl+K focuses the desktop search bar
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setCmdOpen(true);
+        searchRef.current?.focus();
       }
     }
     document.addEventListener('keydown', handleKeyDown);
@@ -154,11 +150,15 @@ export default function Navbar() {
             {/* ===== DESKTOP HEADER ===== */}
             <div className="hidden lg:flex items-center justify-between h-[68px] gap-4">
               {/* Logo */}
-              <Link href="/" className="flex-shrink-0 group">
-                <span className="text-[28px] font-black tracking-tight font-display">
-                  <span className="text-primary-600 group-hover:text-primary-500 transition-colors">Tecno</span>
-                  <span className="text-gray-900">Phone</span>
-                </span>
+              <Link href="/" className="flex-shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/icons/logo-desktop.webp"
+                  alt="TecnoPhone"
+                  width={233}
+                  height={80}
+                  className="h-14 w-auto"
+                />
               </Link>
 
               {/* Nav links (desktop) */}
@@ -233,17 +233,10 @@ export default function Navbar() {
                 </Link>
               </div>
 
-              {/* Search trigger (desktop) — opens Cmd+K modal */}
-              <button
-                onClick={() => setCmdOpen(true)}
-                className="hidden md:flex items-center gap-3 flex-1 max-w-sm lg:max-w-md px-4 py-2.5 bg-surface-100 border border-surface-300 rounded-full text-surface-700 text-sm hover:border-surface-400 hover:bg-surface-200 transition-all group"
-              >
-                <Search className="w-4 h-4" />
-                <span className="flex-1 text-left">Buscar productos...</span>
-                <kbd className="hidden lg:inline-flex items-center gap-0.5 px-2 py-0.5 bg-surface-200 border border-surface-300 rounded-md text-[10px] font-bold text-surface-700 group-hover:border-surface-400 transition-colors">
-                  <Command className="w-3 h-3" />K
-                </kbd>
-              </button>
+              {/* Inline search bar (desktop) */}
+              <div className="hidden md:block flex-1 max-w-sm lg:max-w-md">
+                <InstantSearch ref={searchRef} />
+              </div>
 
               {/* Right actions */}
               <div className="flex items-center gap-1">
@@ -282,7 +275,6 @@ export default function Navbar() {
         </nav>
       </header>
 
-      <CommandSearch open={cmdOpen} onClose={() => setCmdOpen(false)} />
       <TrackingModal open={trackingOpen} onClose={() => setTrackingOpen(false)} />
     </>
   );
