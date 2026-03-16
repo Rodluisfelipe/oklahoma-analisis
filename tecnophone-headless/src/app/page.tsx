@@ -4,7 +4,6 @@ import {
   Smartphone,
   Monitor,
   Headphones,
-  Printer,
   Gamepad2,
   ArrowRight,
   Truck,
@@ -12,20 +11,13 @@ import {
   CreditCard,
   MessageCircle,
   Zap,
-  Tablet,
-  Tv,
   BadgeCheck,
   Package,
   Star,
   Plug,
-  Briefcase,
-  Cpu,
   Tag,
-  Speaker,
-  Projector,
   ShoppingCart,
   Clock,
-  Award,
   Flame,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
@@ -41,61 +33,43 @@ const HeroSlider = dynamic(() => import('@/components/home/HeroSlider'), {
   ),
 });
 
-// Fixed ordered categories to display
+// Fixed ordered categories to display (only categories with real products)
 const showCategories = [
-  { slug: 'accesorios-tecnologicos', name: 'Accesorios tecnológicos', icon: Plug },
-  { slug: 'auriculares', name: 'Auriculares', icon: Headphones },
-  { slug: 'bolsos-y-maletas', name: 'Bolsos y Maletas', icon: Briefcase },
+  { slug: 'portatiles-2', name: 'Portátiles', icon: Laptop },
   { slug: 'celulares', name: 'Celulares', icon: Smartphone },
-  { slug: 'computadores', name: 'Computadores', icon: Cpu },
-  { slug: 'gaming', name: 'Gaming', icon: Gamepad2 },
-  { slug: 'impresoras', name: 'Impresoras', icon: Printer },
   { slug: 'monitores', name: 'Monitores', icon: Monitor },
+  { slug: 'auriculares', name: 'Auriculares', icon: Headphones },
+  { slug: 'gaming', name: 'Gaming', icon: Gamepad2 },
+  { slug: 'accesorios-tecnologicos-en-colombia', name: 'Accesorios', icon: Plug },
   { slug: 'ofertas', name: 'Ofertas', icon: Tag },
-  { slug: 'parlantes', name: 'Parlantes', icon: Speaker },
-  { slug: 'portatiles', name: 'Portátiles', icon: Laptop },
-  { slug: 'proyectores', name: 'Proyectores', icon: Projector },
-  { slug: 'tablets', name: 'Tablets', icon: Tablet },
-  { slug: 'televisores', name: 'Televisores', icon: Tv },
 ];
 
 export const revalidate = 600;
-
-const featuredCategories = [
-  { name: 'Portátiles', slug: 'portatiles', icon: Laptop },
-  { name: 'Celulares', slug: 'celulares', icon: Smartphone },
-  { name: 'Tablets', slug: 'tablets', icon: Tablet },
-  { name: 'Monitores', slug: 'monitores', icon: Monitor },
-  { name: 'Auriculares', slug: 'auriculares', icon: Headphones },
-  { name: 'Gaming', slug: 'gaming', icon: Gamepad2 },
-  { name: 'Impresoras', slug: 'impresoras', icon: Printer },
-  { name: 'Televisores', slug: 'televisores', icon: Tv },
-]; // fallback only
 
 
 const promoBanners = [
   {
     title: '¡Portátiles desde',
     highlight: '$1.299.000!',
-    desc: 'Intel Core i5, 8GB RAM, SSD 256GB. Las mejores marcas.',
-    cta: 'Comprar Ahora',
-    href: '/categoria/portatiles',
+    desc: 'HP, Dell y más. Intel Core i5, 16GB RAM, SSD 512GB.',
+    cta: 'Ver Portátiles',
+    href: '/categoria/portatiles-2',
     bg: 'from-primary-600 to-primary-500',
     icon: Laptop,
   },
   {
-    title: 'Celulares en',
-    highlight: 'Oferta 🔥',
-    desc: 'Samsung, Xiaomi, Motorola con descuentos hasta del 30%.',
+    title: 'Ofertas',
+    highlight: 'Imperdibles 🔥',
+    desc: 'Los mejores descuentos en tecnología. ¡Aprovecha!',
     cta: 'Ver Ofertas',
-    href: '/categoria/celulares',
+    href: '/categoria/ofertas',
     bg: 'from-primary-600 to-blue-700',
-    icon: Smartphone,
+    icon: Tag,
   },
   {
-    title: 'Arma tu setup',
+    title: 'Accesorios',
     highlight: 'Gaming',
-    desc: 'Monitores, auriculares y accesorios para gamers.',
+    desc: 'Mouse, auriculares y monitores para gamers.',
     cta: 'Explorar',
     href: '/categoria/gaming',
     bg: 'from-blue-600 to-primary-600',
@@ -511,9 +485,9 @@ export default async function HomePage() {
         <div className="px-4 sm:px-6 lg:px-8 max-w-[1800px] mx-auto relative z-10">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 text-center">
             {[
-              { value: '500+', label: 'Productos Disponibles', icon: Package },
-              { value: '10,000+', label: 'Unidades Vendidas', icon: Star },
-              { value: '15+', label: 'Marcas Oficiales', icon: BadgeCheck },
+              { value: '25+', label: 'Marcas Oficiales', icon: BadgeCheck },
+              { value: '100%', label: 'Garantía Oficial', icon: Shield },
+              { value: '1-3', label: 'Días de Entrega', icon: Package },
               { value: '4.9/5', label: 'Calificación Clientes', icon: Star },
             ].map((stat) => {
               const Icon = stat.icon;

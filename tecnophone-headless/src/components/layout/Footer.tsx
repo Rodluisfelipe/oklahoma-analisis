@@ -15,9 +15,9 @@ import {
 
 const navLinks = [
   { href: '/productos', label: 'Todos los Productos' },
-  { href: '/categoria/portatiles', label: 'Portátiles' },
+  { href: '/categoria/portatiles-2', label: 'Portátiles' },
   { href: '/categoria/celulares', label: 'Celulares' },
-  { href: '/productos?on_sale=true', label: 'Ofertas' },
+  { href: '/categoria/ofertas', label: 'Ofertas' },
   { href: '/blog', label: 'Blog' },
 ];
 

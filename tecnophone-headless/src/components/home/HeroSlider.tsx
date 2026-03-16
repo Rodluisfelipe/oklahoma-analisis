@@ -6,7 +6,7 @@ import Image from 'next/image';
 import {
   Laptop,
   Smartphone,
-  Tablet,
+  Gamepad2,
   ArrowRight,
   Zap,
   ChevronLeft,
@@ -20,11 +20,11 @@ import { formatPrice } from '@/lib/woocommerce';
 const fallbackSlides: Banner[] = [
   {
     title: '¡Lo Mejor en Portátiles!',
-    subtitle: 'Intel Core, AMD Ryzen, pantallas Full HD y más. Desde las marcas líderes del mercado.',
+    subtitle: 'HP, Dell y más. Intel Core, pantallas Full HD. Envío a todo Colombia.',
     highlightText: 'Portátiles',
     badgeText: 'Nuevo',
     ctaText: 'Ver Portátiles',
-    ctaLink: '/categoria/portatiles',
+    ctaLink: '/categoria/portatiles-2',
     gradientFrom: '#3b82f6',
     gradientTo: '#1e40af',
     productImage: '',
@@ -33,7 +33,7 @@ const fallbackSlides: Banner[] = [
   },
   {
     title: 'Celulares de Última Generación',
-    subtitle: 'Samsung, Xiaomi, Motorola y más. Los mejores precios con garantía oficial.',
+    subtitle: 'Motorola y más. Los mejores precios con garantía oficial.',
     highlightText: 'Última Generación',
     badgeText: 'Trending',
     ctaText: 'Ver Celulares',
@@ -45,12 +45,12 @@ const fallbackSlides: Banner[] = [
     sortOrder: 1,
   },
   {
-    title: 'Tablets para Estudiar y Trabajar',
-    subtitle: 'La productividad que necesitas. Opciones desde las marcas más confiables.',
-    highlightText: 'Estudiar y Trabajar',
+    title: 'Monitores y Gaming',
+    subtitle: 'Monitores gamer, mouse y accesorios para tu setup.',
+    highlightText: 'Gaming',
     badgeText: 'Ofertas',
-    ctaText: 'Ver Tablets',
-    ctaLink: '/categoria/tablets',
+    ctaText: 'Ver Gaming',
+    ctaLink: '/categoria/gaming',
     gradientFrom: '#3b82f6',
     gradientTo: '#60a5fa',
     productImage: '',
@@ -59,11 +59,11 @@ const fallbackSlides: Banner[] = [
   },
   {
     title: 'Ofertas Imperdibles 🔥',
-    subtitle: 'Descuentos exclusivos en productos seleccionados. Aprovecha antes de que se acaben.',
+    subtitle: 'Descuentos exclusivos en productos seleccionados. ¡Aprovecha!',
     highlightText: 'Imperdibles 🔥',
     badgeText: 'Hot Sale',
     ctaText: 'Ver Ofertas',
-    ctaLink: '/productos?on_sale=true',
+    ctaLink: '/categoria/ofertas',
     gradientFrom: '#1e3a8a',
     gradientTo: '#3b82f6',
     productImage: '',
@@ -73,9 +73,9 @@ const fallbackSlides: Banner[] = [
 ];
 
 const fallbackIcons: Record<string, typeof Laptop> = {
-  '/categoria/portatiles': Laptop,
+  '/categoria/portatiles-2': Laptop,
   '/categoria/celulares': Smartphone,
-  '/categoria/tablets': Tablet,
+  '/categoria/gaming': Gamepad2,
 };
 
 const AUTOPLAY_DELAY = 6000;

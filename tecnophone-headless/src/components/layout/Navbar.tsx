@@ -10,16 +10,10 @@ import {
   ChevronDown,
   Laptop,
   Smartphone,
-  Tablet,
   Monitor,
-  Printer,
-  Speaker,
   Headphones,
   Gamepad2,
-  Tv,
-  Projector,
   ShoppingBag,
-  Briefcase,
   Zap,
   User,
   Command,
@@ -32,20 +26,13 @@ import TrackingModal from '@/components/tracking/TrackingModal';
 import SearchTrigger from '@/components/home/SearchTrigger';
 
 const categories = [
-  { name: 'Portátiles', slug: 'portatiles', icon: Laptop, desc: 'Laptops y ultrabooks' },
+  { name: 'Portátiles', slug: 'portatiles-2', icon: Laptop, desc: 'HP, Dell, Lenovo y más' },
   { name: 'Celulares', slug: 'celulares', icon: Smartphone, desc: 'Smartphones y accesorios' },
-  { name: 'Tablets', slug: 'tablets', icon: Tablet, desc: 'iPads y Android tablets' },
   { name: 'Monitores', slug: 'monitores', icon: Monitor, desc: 'Full HD, 4K y gaming' },
-  { name: 'Computadores', slug: 'computadores', icon: Monitor, desc: 'All-in-one y torres' },
-  { name: 'Impresoras', slug: 'impresoras', icon: Printer, desc: 'Láser e inyección' },
-  { name: 'Parlantes', slug: 'parlantes', icon: Speaker, desc: 'Bluetooth y barras' },
-  { name: 'Auriculares', slug: 'auriculares', icon: Headphones, desc: 'Over-ear e in-ear' },
-  { name: 'Gaming', slug: 'gaming', icon: Gamepad2, desc: 'Periféricos y consolas' },
-  { name: 'Televisores', slug: 'televisores', icon: Tv, desc: 'Smart TV y OLED' },
-  { name: 'Proyectores', slug: 'proyectores', icon: Projector, desc: 'Home cinema y portátil' },
-  { name: 'Accesorios', slug: 'accesorios', icon: ShoppingBag, desc: 'Cables, fundas y más' },
-  { name: 'Bolsos y Maletas', slug: 'bolsos-maletas', icon: Briefcase, desc: 'Para tu portátil' },
-  { name: 'Ofertas', slug: 'ofertas', icon: ShoppingBag, desc: 'Descuentos especiales' },
+  { name: 'Auriculares', slug: 'auriculares', icon: Headphones, desc: 'Inalámbricos y con cable' },
+  { name: 'Gaming', slug: 'gaming', icon: Gamepad2, desc: 'Mouse, teclados y periféricos' },
+  { name: 'Accesorios', slug: 'accesorios-tecnologicos-en-colombia', icon: ShoppingBag, desc: 'Mouse, teclados y más' },
+  { name: 'Ofertas', slug: 'ofertas', icon: Zap, desc: 'Descuentos especiales' },
 ];
 
 const navLinks = [
