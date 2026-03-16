@@ -269,6 +269,7 @@ export default function CheckoutPage() {
                       value={form.first_name}
                       onChange={handleChange}
                       required
+                      autoComplete="given-name"
                       className="w-full px-4 py-3 border border-surface-300 rounded-xl bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all placeholder:text-surface-500"
                       placeholder="Tu nombre"
                     />
@@ -283,6 +284,7 @@ export default function CheckoutPage() {
                       value={form.last_name}
                       onChange={handleChange}
                       required
+                      autoComplete="family-name"
                       className="w-full px-4 py-3 border border-surface-300 rounded-xl bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all placeholder:text-surface-500"
                       placeholder="Tu apellido"
                     />
@@ -301,6 +303,7 @@ export default function CheckoutPage() {
                       value={form.email}
                       onChange={handleChange}
                       required
+                      autoComplete="email"
                       className="w-full px-4 py-3 border border-surface-300 rounded-xl bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all placeholder:text-surface-500"
                       placeholder="correo@ejemplo.com"
                     />
@@ -313,9 +316,11 @@ export default function CheckoutPage() {
                     <input
                       type="tel"
                       name="phone"
+                      inputMode="tel"
                       value={form.phone}
                       onChange={handleChange}
                       required
+                      autoComplete="tel"
                       className="w-full px-4 py-3 border border-surface-300 rounded-xl bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all placeholder:text-surface-500"
                       placeholder="300 123 4567"
                     />
@@ -341,6 +346,7 @@ export default function CheckoutPage() {
                       value={form.address_1}
                       onChange={handleChange}
                       required
+                      autoComplete="street-address"
                       className="w-full px-4 py-3 border border-surface-300 rounded-xl bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all placeholder:text-surface-500"
                       placeholder="Calle 123 #45-67, Apto 101"
                     />
@@ -550,7 +556,7 @@ export default function CheckoutPage() {
                           <Lock className="w-3.5 h-3.5" /> SSL encriptado
                         </span>
                       </div>
-                      <p className="text-[10px] text-center text-surface-600">
+                        <p className="text-xs text-center text-surface-600">
                         Procesado de forma segura por MercadoPago. No almacenamos tus datos de pago.
                       </p>
                     </div>

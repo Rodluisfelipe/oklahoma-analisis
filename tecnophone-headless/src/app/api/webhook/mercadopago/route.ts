@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
-import { createHmac } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 
 const ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
 const MP_WEBHOOK_SECRET = process.env.MP_WEBHOOK_SECRET || '';
@@ -18,8 +18,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
     }
 
-    // Validate signature if secret is configured
-    if (MP_WEBHOOK_SECRET) {
+    // Validate signature — reject if secret is not configured
+    if (!MP_WEBHOOK_SECRET) {
+      console.error('[MP Webhook] MP_WEBHOOK_SECRET not configured — rejecting');
+      return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
+    }
+
+    {
       const xSignature = request.headers.get('x-signature') || '';
       const xRequestId = request.headers.get('x-request-id') || '';
 
@@ -51,7 +56,10 @@ export async function POST(request: NextRequest) {
         .update(manifest)
         .digest('hex');
 
-      if (expectedHmac !== v1) {
+      // Timing-safe comparison to prevent timing attacks
+      const expectedBuf = Buffer.from(expectedHmac, 'utf8');
+      const receivedBuf = Buffer.from(v1, 'utf8');
+      if (expectedBuf.length !== receivedBuf.length || !timingSafeEqual(expectedBuf, receivedBuf)) {
         console.warn('[MP Webhook] Signature mismatch');
         return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
       }

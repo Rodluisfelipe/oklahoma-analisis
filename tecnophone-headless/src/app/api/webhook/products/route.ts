@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createHmac } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 import { revalidatePath } from 'next/cache';
 import { updateProduct, deleteProduct, MeiliProduct } from '@/lib/meilisearch';
 
@@ -66,12 +66,20 @@ export async function POST(request: NextRequest) {
 
   const rawBody = await request.text();
 
+  if (!WEBHOOK_SECRET) {
+    console.error('[WC Webhook] WC_WEBHOOK_SECRET not configured — rejecting');
+    return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
+  }
+
   if (WEBHOOK_SECRET) {
     if (signature) {
       const expectedSig = createHmac('sha256', WEBHOOK_SECRET)
         .update(rawBody, 'utf8')
         .digest('base64');
-      if (signature !== expectedSig) {
+      // Timing-safe comparison
+      const expectedBuf = Buffer.from(expectedSig, 'utf8');
+      const receivedBuf = Buffer.from(signature, 'utf8');
+      if (expectedBuf.length !== receivedBuf.length || !timingSafeEqual(expectedBuf, receivedBuf)) {
         return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
       }
     } else {

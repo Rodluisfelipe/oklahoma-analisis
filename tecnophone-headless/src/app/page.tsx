@@ -36,9 +36,8 @@ import { Banner, WCCategory } from '@/types/woocommerce';
 import Image from 'next/image';
 
 const HeroSlider = dynamic(() => import('@/components/home/HeroSlider'), {
-  ssr: false,
   loading: () => (
-    <div className="w-full h-[380px] sm:h-[400px] lg:h-[480px] bg-surface-100 animate-pulse" />
+    <div className="w-full h-[220px] lg:h-[480px] bg-surface-100 animate-pulse" />
   ),
 });
 
@@ -140,8 +139,60 @@ export default async function HomePage() {
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .slice(0, 3);
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.tecnophone.co';
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': `${siteUrl}/#organization`,
+        name: 'TecnoPhone',
+        url: siteUrl,
+        logo: `${siteUrl}/icons/icon-512.png`,
+        contactPoint: {
+          '@type': 'ContactPoint',
+          telephone: '+57-313-229-4533',
+          contactType: 'sales',
+          areaServed: 'CO',
+          availableLanguage: 'Spanish',
+        },
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Chía',
+          addressRegion: 'Cundinamarca',
+          addressCountry: 'CO',
+        },
+        sameAs: [
+          'https://www.facebook.com/tecnophone.co',
+          'https://www.instagram.com/tecnophone.co',
+        ],
+      },
+      {
+        '@type': 'WebSite',
+        '@id': `${siteUrl}/#website`,
+        url: siteUrl,
+        name: 'TecnoPhone',
+        publisher: { '@id': `${siteUrl}/#organization` },
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: `${siteUrl}/productos?q={search_term_string}`,
+          'query-input': 'required name=search_term_string',
+        },
+      },
+    ],
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
+      {/* Visually hidden H1 for SEO — page has visual hero slider instead */}
+      <h1 className="sr-only">TecnoPhone — Tienda de Tecnología en Colombia: Portátiles, Celulares y Accesorios</h1>
+
       {/* ===== HERO SLIDER ===== */}
       <HeroSlider banners={(() => { const hero = banners.filter(b => !b.title.startsWith('SBANNER') && !b.title.startsWith('LBANNER') && !b.title.startsWith('LARGEBANNER')); return hero.length > 0 ? hero : undefined; })()} featuredProducts={latestProducts.length > 0 ? latestProducts : undefined} />
 
@@ -268,7 +319,7 @@ export default async function HomePage() {
                 width={700}
                 height={350}
                 className="w-full h-auto object-cover"
-                sizes="100vw"
+                sizes="(max-width: 1024px) 100vw, 33vw"
               />
             </Link>
           </div>
@@ -332,7 +383,7 @@ export default async function HomePage() {
                 width={700}
                 height={350}
                 className="w-full h-auto object-cover"
-                sizes="100vw"
+                sizes="(max-width: 1024px) 100vw, 33vw"
               />
             </Link>
           </div>
@@ -418,7 +469,7 @@ export default async function HomePage() {
                 width={700}
                 height={350}
                 className="w-full h-auto object-cover"
-                sizes="100vw"
+                sizes="(max-width: 1024px) 100vw, 33vw"
               />
             </Link>
           </div>
@@ -446,7 +497,7 @@ export default async function HomePage() {
                     width={1800}
                     height={400}
                     className="w-full h-auto object-cover"
-                    sizes="100vw"
+                    sizes="(max-width: 1024px) 100vw, 1200px"
                   />
                 </Link>
               ))}

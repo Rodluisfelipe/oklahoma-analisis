@@ -71,7 +71,7 @@ export default function BottomNav() {
                 <button
                   key={tab.key}
                   onClick={(e) => handleTabClick(tab.key, e)}
-                  className="flex-1 flex flex-col items-center -mt-5 relative"
+                  className="flex-1 flex flex-col items-center -mt-5 relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-xl"
                   aria-label={tab.label}
                 >
                   <div className="relative w-14 h-14 rounded-full bg-primary-600 shadow-lg shadow-primary-600/30 flex items-center justify-center active:scale-90 transition-transform ring-4 ring-white">
@@ -137,7 +137,7 @@ export default function BottomNav() {
                 <button
                   key={tab.key}
                   onClick={(e) => handleTabClick(tab.key, e)}
-                  className="flex-1 flex items-center justify-center pb-1.5 active:scale-95 transition-transform"
+                  className="flex-1 flex items-center justify-center min-h-[44px] pb-1.5 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-xl"
                   aria-label={tab.label}
                 >
                   {content}
@@ -149,7 +149,7 @@ export default function BottomNav() {
               <Link
                 key={tab.key}
                 href={tab.href}
-                className="flex-1 flex items-center justify-center pb-1.5 active:scale-95 transition-transform"
+                className="flex-1 flex items-center justify-center min-h-[44px] pb-1.5 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-xl"
                 aria-label={tab.label}
               >
                 {content}

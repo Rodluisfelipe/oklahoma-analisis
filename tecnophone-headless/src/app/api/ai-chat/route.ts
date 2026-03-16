@@ -56,11 +56,22 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const message: string = body.message?.trim();
-    const history: ChatMessage[] = Array.isArray(body.history) ? body.history : [];
+    const rawHistory: ChatMessage[] = Array.isArray(body.history) ? body.history : [];
 
     if (!message) {
       return NextResponse.json({ error: 'Mensaje vacío' }, { status: 400 });
     }
+
+    // Input size limits
+    if (message.length > 1000) {
+      return NextResponse.json({ error: 'Mensaje demasiado largo (máx 1000 caracteres)' }, { status: 400 });
+    }
+
+    // Validate and sanitize history roles — only allow 'user' and 'assistant'
+    const history: ChatMessage[] = rawHistory
+      .filter((m) => m.role === 'user' || m.role === 'assistant')
+      .slice(-6)
+      .map((m) => ({ role: m.role, content: String(m.content || '').slice(0, 2000) }));
 
     if (!GROQ_API_KEY) {
       return NextResponse.json({ error: 'API key no configurada' }, { status: 500 });
@@ -122,7 +133,7 @@ suggestedSlugs: array con slugs EXACTOS del catálogo (máx 4). Array vacío si 
     // Build messages array with history (last 6 messages)
     const messages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
-      ...history.slice(-6),
+      ...history,
       { role: 'user', content: message },
     ];
 

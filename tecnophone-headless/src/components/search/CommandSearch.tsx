@@ -45,6 +45,7 @@ export default function CommandSearch({ open, onClose }: CommandSearchProps) {
   const [total, setTotal] = useState(0);
   const [timeMs, setTimeMs] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [searchError, setSearchError] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const desktopInputRef = useRef<HTMLInputElement>(null);
@@ -90,6 +91,7 @@ export default function CommandSearch({ open, onClose }: CommandSearchProps) {
     const controller = new AbortController();
     abortRef.current = controller;
     setLoading(true);
+    setSearchError(false);
     try {
       const res = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}&limit=8`, {
         signal: controller.signal,
@@ -103,6 +105,7 @@ export default function CommandSearch({ open, onClose }: CommandSearchProps) {
       if ((err as Error).name !== 'AbortError') {
         setResults([]);
         setTotal(0);
+        setSearchError(true);
       }
     }
     setLoading(false);
@@ -220,10 +223,16 @@ export default function CommandSearch({ open, onClose }: CommandSearchProps) {
         </>
       )}
 
-      {query.trim().length > 0 && !loading && results.length === 0 && (
+      {query.trim().length > 0 && !loading && results.length === 0 && !searchError && (
         <div className="px-5 py-10 text-center">
           <Package className="w-10 h-10 text-surface-400 mx-auto mb-3" />
           <p className="text-sm text-surface-600">No se encontraron productos para &ldquo;{query}&rdquo;</p>
+        </div>
+      )}
+
+      {searchError && !loading && (
+        <div className="px-5 py-10 text-center">
+          <p className="text-sm text-red-500 font-medium">Error al buscar. Verifica tu conexión e intenta de nuevo.</p>
         </div>
       )}
     </div>

@@ -90,14 +90,34 @@ export const useCartStore = create<CartStore>()(
       totalPrice: () =>
         get().items.reduce((sum, item) => {
           const price = item.variation
-            ? parseFloat(item.variation.price)
-            : parseFloat(item.product.price);
+            ? parseFloat(item.variation.price) || 0
+            : parseFloat(item.product.price) || 0;
           return sum + price * item.quantity;
         }, 0),
     }),
     {
       name: 'tecnophone-cart',
-      partialize: (state) => ({ items: state.items, lastUpdated: state.lastUpdated }),
+      partialize: (state) => ({
+        items: state.items.map((item) => ({
+          product: {
+            id: item.product.id,
+            name: item.product.name,
+            slug: item.product.slug,
+            type: item.product.type,
+            price: item.product.price,
+            regular_price: item.product.regular_price,
+            sale_price: item.product.sale_price,
+            on_sale: item.product.on_sale,
+            stock_status: item.product.stock_status,
+            images: item.product.images.slice(0, 1),
+            external_url: item.product.external_url,
+          } as WCProduct,
+          quantity: item.quantity,
+          variationId: item.variationId,
+          variation: item.variation,
+        })),
+        lastUpdated: state.lastUpdated,
+      }),
       skipHydration: true,
       onRehydrateStorage: () => (state) => {
         if (state && state.lastUpdated && Date.now() - state.lastUpdated > CART_EXPIRY_MS) {

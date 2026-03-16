@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   const query = request.nextUrl.searchParams.get('q');
   const filter = request.nextUrl.searchParams.get('filter') || undefined;
   const sort = request.nextUrl.searchParams.get('sort') || undefined;
-  const limit = parseInt(request.nextUrl.searchParams.get('limit') || '20', 10);
+  const limit = Math.min(parseInt(request.nextUrl.searchParams.get('limit') || '20', 10), 100);
   const offset = parseInt(request.nextUrl.searchParams.get('offset') || '0', 10);
 
   if (!query || query.trim().length < 1) {

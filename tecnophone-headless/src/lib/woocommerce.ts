@@ -134,8 +134,8 @@ export async function getProducts(params: {
   await enrichProductsWithBrands(products);
 
   const hasMore = data.products.pageInfo.hasNextPage;
-  const total = hasMore ? products.length * 2 : products.length;
-  const totalPages = hasMore ? Math.ceil(total / perPage) : 1;
+  const total = hasMore ? products.length + perPage : products.length;
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
 
   const result = { products, totalPages, total };
   setCache(cacheKey, result, 300);
@@ -286,8 +286,12 @@ async function getProductBrandMap(): Promise<Map<number, { id: number; name: str
     let page = 1;
     let hasMore = true;
     while (hasMore) {
-      const url = `${baseUrl}/wp-json/wc/v3/products?consumer_key=${ck}&consumer_secret=${cs}&per_page=100&page=${page}&_fields=id,brands&status=publish`;
-      const res = await fetch(url, { next: { revalidate: 1800 } });
+      const url = `${baseUrl}/wp-json/wc/v3/products?per_page=100&page=${page}&_fields=id,brands&status=publish`;
+      const authHeader = 'Basic ' + Buffer.from(`${ck}:${cs}`).toString('base64');
+      const res = await fetch(url, {
+        headers: { Authorization: authHeader },
+        next: { revalidate: 1800 },
+      });
       if (!res.ok) break;
       const data: RestProductBrand[] = await res.json();
       for (const p of data) {
@@ -338,10 +342,14 @@ export async function getBrands(): Promise<WCBrand[]> {
   const baseUrl = process.env.NEXT_PUBLIC_WORDPRESS_URL || 'https://www.tecnophone.co';
   const ck = process.env.WC_CONSUMER_KEY || '';
   const cs = process.env.WC_CONSUMER_SECRET || '';
-  const url = `${baseUrl}/wp-json/wc/v3/products/brands?consumer_key=${ck}&consumer_secret=${cs}&per_page=100`;
+  const url = `${baseUrl}/wp-json/wc/v3/products/brands?per_page=100`;
 
   try {
-    const res = await fetch(url, { next: { revalidate: 1800 } });
+    const authHeader = 'Basic ' + Buffer.from(`${ck}:${cs}`).toString('base64');
+    const res = await fetch(url, {
+      headers: { Authorization: authHeader },
+      next: { revalidate: 1800 },
+    });
     if (!res.ok) return [];
     const data = await res.json();
     const brands: WCBrand[] = (data as Array<{ id: number; name: string; slug: string; image?: { id: number; src: string; name: string; alt: string } | null }>).map((b) => ({

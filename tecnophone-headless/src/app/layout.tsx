@@ -5,7 +5,6 @@ import './globals.css';
 import Footer from '@/components/layout/Footer';
 
 const Navbar = dynamic(() => import('@/components/layout/Navbar'), {
-  ssr: false,
   loading: () => (
     <header className="sticky top-0 z-50">
       <div className="bg-primary-600 text-white py-1.5 text-center">
@@ -25,7 +24,10 @@ const CartDrawer = dynamic(() => import('@/components/layout/CartDrawer'), { ssr
 
 const ToasterProvider = dynamic(() => import('@/components/layout/ToasterProvider'), { ssr: false });
 const BottomNav = dynamic(() => import('@/components/layout/BottomNav'), { ssr: false });
-const AiChatBubble = dynamic(() => import('@/components/chat/AiChatBubble'), { ssr: false });
+const AiChatBubble = dynamic(() => import('@/components/chat/AiChatBubble'), {
+  ssr: false,
+  loading: () => null,
+});
 
 const inter = Inter({
   subsets: ['latin'],
@@ -89,8 +91,14 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://www.tecnophone.co" />
       </head>
       <body className="min-h-screen flex flex-col">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-primary-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm focus:font-bold focus:shadow-lg"
+        >
+          Ir al contenido principal
+        </a>
         <Navbar />
-        <main className="flex-1">{children}</main>
+        <main id="main-content" className="flex-1">{children}</main>
         <Footer />
         <CartDrawer />
 

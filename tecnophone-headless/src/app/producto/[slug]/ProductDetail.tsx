@@ -28,12 +28,12 @@ import {
   Film,
   Share2,
   X,
-  Eye,
 } from 'lucide-react';
 import { WCProduct } from '@/types/woocommerce';
 import { formatPrice, calculateDiscount } from '@/lib/woocommerce';
 import { useCartStore } from '@/store/cart';
 import ProductCard from '@/components/products/ProductCard';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { toast } from '@/lib/toast';
 
@@ -45,6 +45,7 @@ interface Props {
 const idealParaIcons = [Briefcase, GraduationCap, Film, Gamepad2];
 
 export default function ProductDetail({ product, relatedProducts }: Props) {
+  const router = useRouter();
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
@@ -57,8 +58,6 @@ export default function ProductDetail({ product, relatedProducts }: Props) {
   const discount = calculateDiscount(product.regular_price, product.sale_price);
   const price = parseFloat(product.price);
   const monthlyPrice = price > 0 ? Math.round(price / 12) : 0;
-  // Simulated viewer count (seeded by product ID for consistency)
-  const viewerCount = ((product.id * 7 + 3) % 18) + 5;
   const inStock = product.stock_status !== 'outofstock';
 
   const handleAddToCart = () => {
@@ -101,7 +100,7 @@ export default function ProductDetail({ product, relatedProducts }: Props) {
     for (let i = 0; i < quantity; i++) {
       addItem(product);
     }
-    window.location.href = '/checkout';
+    router.push('/checkout');
   };
 
   const whatsappMsg = encodeURIComponent(
@@ -274,14 +273,14 @@ export default function ProductDetail({ product, relatedProducts }: Props) {
               {product.images.length > 1 && (
                 <>
                   <button
-                    onClick={prevImage}
+                    onClick={(e) => { e.stopPropagation(); prevImage(); }}
                     className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white border border-surface-200"
                     aria-label="Imagen anterior"
                   >
                     <ChevronLeft className="w-5 h-5 text-gray-700" />
                   </button>
                   <button
-                    onClick={nextImage}
+                    onClick={(e) => { e.stopPropagation(); nextImage(); }}
                     className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white border border-surface-200"
                     aria-label="Imagen siguiente"
                   >
@@ -372,14 +371,6 @@ export default function ProductDetail({ product, relatedProducts }: Props) {
                 <Share2 className="w-3.5 h-3.5" />
                 Compartir
               </button>
-            </div>
-
-            {/* Social proof — viewers */}
-            <div className="flex items-center gap-2 text-sm">
-              <Eye className="w-4 h-4 text-amber-500" />
-              <span className="text-surface-700">
-                <span className="font-bold text-amber-500">{viewerCount} personas</span> están viendo este producto
-              </span>
             </div>
 
             {/* Price block */}

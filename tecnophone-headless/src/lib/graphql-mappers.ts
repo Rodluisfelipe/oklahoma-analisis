@@ -200,7 +200,7 @@ export function mapGraphQLProduct(p: GQLProduct): WCProduct {
     regular_price: parsePrice(p.regularPrice),
     sale_price: parsePrice(p.salePrice),
     on_sale: p.onSale || false,
-    stock_status: (p.stockStatus || 'instock').toLowerCase().replace('_', ''),
+    stock_status: (p.stockStatus || 'instock').toLowerCase().replace(/_/g, ''),
     stock_quantity: p.stockQuantity ?? null,
     categories: p.productCategories?.nodes?.map(mapGraphQLCategory) || [],
     tags: p.productTags?.nodes?.map((t) => ({
@@ -250,7 +250,7 @@ export function mapGraphQLVariation(v: GQLVariation): WCProductVariation {
     price: v.price || '',
     regular_price: v.regularPrice || '',
     sale_price: v.salePrice || '',
-    stock_status: (v.stockStatus || 'instock').toLowerCase().replace('_', ''),
+    stock_status: (v.stockStatus || 'instock').toLowerCase().replace(/_/g, ''),
     stock_quantity: v.stockQuantity ?? null,
     attributes: v.attributes?.nodes?.map((a) => ({
       name: a.name,

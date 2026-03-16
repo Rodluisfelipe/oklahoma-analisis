@@ -285,7 +285,7 @@ export default function HeroSlider({ banners, featuredProducts = [] }: HeroSlide
                   fill
                   className="object-contain object-center"
                   priority={i === 0}
-                  sizes="100vw"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
                 />
               </Link>
             </div>
@@ -446,7 +446,7 @@ export default function HeroSlider({ banners, featuredProducts = [] }: HeroSlide
                       fill
                       className="object-contain object-center"
                       priority={i === 0}
-                      sizes="100vw"
+                      sizes="(max-width: 1024px) 100vw, 50vw"
                     />
                   </Link>
                 ) : (

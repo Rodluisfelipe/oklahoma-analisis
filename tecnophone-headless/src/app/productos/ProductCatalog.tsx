@@ -308,20 +308,36 @@ export default function ProductCatalog({
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-center gap-2 mt-10">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <button
-              key={p}
-              onClick={() => updateParam('page', String(p))}
-              className={cn(
-                'w-10 h-10 rounded-lg text-sm font-medium transition-colors',
-                p === page
-                  ? 'bg-primary-500 text-white'
-                  : 'bg-surface-100 border border-surface-300 text-surface-700 hover:border-primary-500/30'
-              )}
-            >
-              {p}
-            </button>
-          ))}
+          {(() => {
+            const pages: (number | 'ellipsis')[] = [];
+            if (totalPages <= 7) {
+              for (let i = 1; i <= totalPages; i++) pages.push(i);
+            } else {
+              pages.push(1);
+              if (page > 3) pages.push('ellipsis');
+              for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) pages.push(i);
+              if (page < totalPages - 2) pages.push('ellipsis');
+              pages.push(totalPages);
+            }
+            return pages.map((p, idx) =>
+              p === 'ellipsis' ? (
+                <span key={`e${idx}`} className="w-10 h-10 flex items-center justify-center text-surface-500">…</span>
+              ) : (
+                <button
+                  key={p}
+                  onClick={() => updateParam('page', String(p))}
+                  className={cn(
+                    'w-10 h-10 rounded-lg text-sm font-medium transition-colors',
+                    p === page
+                      ? 'bg-primary-500 text-white'
+                      : 'bg-surface-100 border border-surface-300 text-surface-700 hover:border-primary-500/30'
+                  )}
+                >
+                  {p}
+                </button>
+              )
+            );
+          })()}
         </div>
       )}
     </div>

@@ -106,16 +106,14 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden lg:block" />
         <div className="absolute bottom-3 left-3 right-3 hidden lg:flex justify-center opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
           {product.type === 'external' && product.external_url ? (
-            <a
-              href={product.external_url}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(product.external_url, '_blank', 'noopener,noreferrer'); }}
               aria-label={product.button_text || 'Comprar producto'}
               className="flex items-center gap-2 bg-primary-600/95 backdrop-blur-sm text-white px-5 py-2.5 rounded-xl shadow-lg hover:bg-primary-700 transition-colors duration-200 border border-primary-500 text-sm font-bold"
             >
               <ShoppingCart className="w-4 h-4" />
               {product.button_text || 'Comprar'}
-            </a>
+            </button>
           ) : (
             <button
               onClick={handleAddToCart}
@@ -132,15 +130,13 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
         {/* Mobile floating quick-add button */}
         {product.stock_status !== 'outofstock' && (
           product.type === 'external' && product.external_url ? (
-            <a
-              href={product.external_url}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(product.external_url, '_blank', 'noopener,noreferrer'); }}
               aria-label={product.button_text || 'Comprar producto'}
               className="absolute bottom-2 right-2 w-9 h-9 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 active:scale-90 z-10 lg:hidden bg-primary-600 text-white"
             >
               <Plus className="w-4 h-4" strokeWidth={2.5} />
-            </a>
+            </button>
           ) : (
             <button
               onClick={handleAddToCart}
@@ -168,6 +164,8 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                 <img
                   src={product.brand.image.src}
                   alt={product.brand.name}
+                  width={64}
+                  height={16}
                   className="h-4 w-auto object-contain opacity-60 grayscale"
                   loading="lazy"
                 />
@@ -263,7 +261,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
           >
             {product.external_url.toLowerCase().includes('mercadolibre') ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src="/mercadolibre-logo.png" alt="MercadoLibre" className="w-5 h-5 flex-shrink-0 rounded" />
+              <Image src="/mercadolibre-logo.png" alt="MercadoLibre" width={20} height={20} className="w-5 h-5 flex-shrink-0 rounded" />
             ) : product.external_url.toLowerCase().includes('falabella') ? (
               <svg viewBox="0 0 400 400" className="w-5 h-5 flex-shrink-0">
                 <circle cx="200" cy="200" r="190" fill="#B2D235" />

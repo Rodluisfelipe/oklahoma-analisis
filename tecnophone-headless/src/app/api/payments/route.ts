@@ -78,6 +78,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // ── Verify transaction_amount against WooCommerce order total ──
+    if (body.order_id) {
+      const WP_URL = process.env.NEXT_PUBLIC_WORDPRESS_URL || 'https://www.tecnophone.co';
+      const CK = process.env.WC_CONSUMER_KEY;
+      const CS = process.env.WC_CONSUMER_SECRET;
+      if (CK && CS) {
+        try {
+          const authHeader = 'Basic ' + Buffer.from(`${CK}:${CS}`).toString('base64');
+          const orderRes = await fetch(`${WP_URL}/wp-json/wc/v3/orders/${body.order_id}`, {
+            headers: { Authorization: authHeader },
+          });
+          if (orderRes.ok) {
+            const orderData = await orderRes.json();
+            const orderTotal = parseFloat(orderData.total);
+            if (Math.abs(orderTotal - body.transaction_amount) > 1) {
+              console.error(`[Payments] Amount mismatch: client=${body.transaction_amount}, order=${orderTotal}`);
+              return NextResponse.json(
+                { error: 'El monto no coincide con el pedido' },
+                { status: 400 }
+              );
+            }
+          }
+        } catch (err) {
+          console.error('[Payments] Order verification failed:', err);
+        }
+      }
+    }
+
     const client = new MercadoPagoConfig({ accessToken: ACCESS_TOKEN });
     const payment = new Payment(client);
 

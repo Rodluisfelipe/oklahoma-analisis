@@ -22,6 +22,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ valid: true, issues: [] });
     }
 
+    // Limit array size to prevent DoS amplification
+    if (items.length > 20) {
+      return NextResponse.json(
+        { error: 'Demasiados items (máx 20)' },
+        { status: 400 }
+      );
+    }
+
     const authHeader = 'Basic ' + Buffer.from(`${CK}:${CS}`).toString('base64');
     const issues: { product_id: number; name: string; reason: string }[] = [];
 
@@ -73,6 +81,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('[Stock Check] Error:', error);
-    return NextResponse.json({ valid: true, issues: [] });
+    return NextResponse.json(
+      { valid: false, issues: [{ product_id: 0, name: 'Error', reason: 'No se pudo verificar el stock. Intenta de nuevo.' }] },
+      { status: 500 }
+    );
   }
 }
