@@ -120,28 +120,6 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      // Verify stock in real-time before creating the order
-      const stockRes = await fetch('/api/stock-check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: items.map((item) => ({
-            product_id: item.product.id,
-            quantity: item.quantity,
-            ...(item.variationId ? { variation_id: item.variationId } : {}),
-          })),
-        }),
-      });
-      const stockData = await stockRes.json();
-      if (!stockData.valid && stockData.issues?.length) {
-        const issueMsg = stockData.issues
-          .map((i: { name: string; reason: string }) => `${i.name}: ${i.reason}`)
-          .join('\n');
-        setError(`Problemas de disponibilidad:\n${issueMsg}`);
-        setLoading(false);
-        return;
-      }
-
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

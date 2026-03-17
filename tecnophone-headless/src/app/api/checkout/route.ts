@@ -51,7 +51,50 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Faltan datos de facturación' }, { status: 400 });
     }
 
-    // Determine payment method
+    const authHeader = 'Basic ' + Buffer.from(`${CK}:${CS}`).toString('base64');
+
+    // ── Stock check (batch: single WC call for simple products + parallel for variations) ──
+    const simpleIds = body.line_items.filter((i) => !i.variation_id).map((i) => i.product_id);
+    const variationItems = body.line_items.filter((i) => i.variation_id);
+
+    const stockFetches: Promise<{ id: number; stock_status: string; manage_stock: boolean; stock_quantity: number | null; name: string }[]>[] = [];
+
+    // Batch fetch all simple products in ONE call
+    if (simpleIds.length > 0) {
+      stockFetches.push(
+        fetch(`${WP_URL}/wp-json/wc/v3/products?include=${simpleIds.join(',')}&per_page=${simpleIds.length}&_fields=id,name,stock_status,manage_stock,stock_quantity`, {
+          headers: { Authorization: authHeader },
+        }).then((r) => r.ok ? r.json() : [])
+      );
+    }
+
+    // Fetch variations in parallel
+    const variationFetches = variationItems.map((item) =>
+      fetch(`${WP_URL}/wp-json/wc/v3/products/${item.product_id}/variations/${item.variation_id}?_fields=id,name,stock_status,manage_stock,stock_quantity`, {
+        headers: { Authorization: authHeader },
+      }).then((r) => r.ok ? r.json().then((v) => [v]) : [])
+    );
+
+    const allResults = await Promise.all([...stockFetches, ...variationFetches]);
+    const allProducts = allResults.flat();
+
+    const stockIssues: string[] = [];
+    for (const item of body.line_items) {
+      const checkId = item.variation_id || item.product_id;
+      const prod = allProducts.find((p: { id: number }) => p.id === checkId);
+      if (!prod) continue;
+      if (prod.stock_status === 'outofstock') {
+        stockIssues.push(`${prod.name || `Producto #${item.product_id}`}: Agotado`);
+      } else if (prod.manage_stock && prod.stock_quantity !== null && prod.stock_quantity < item.quantity) {
+        stockIssues.push(`${prod.name || `Producto #${item.product_id}`}: Solo quedan ${prod.stock_quantity} unidades`);
+      }
+    }
+
+    if (stockIssues.length > 0) {
+      return NextResponse.json({ error: `Problemas de disponibilidad:\n${stockIssues.join('\n')}` }, { status: 409 });
+    }
+
+    // ── Create order ──
     const isBacs = body.payment_method === 'bacs';
 
     // Create WooCommerce order via REST API
@@ -79,8 +122,6 @@ export async function POST(request: NextRequest) {
       })),
       customer_note: body.customer_note || '',
     };
-
-    const authHeader = 'Basic ' + Buffer.from(`${CK}:${CS}`).toString('base64');
 
     const res = await fetch(`${WP_URL}/wp-json/wc/v3/orders`, {
       method: 'POST',
