@@ -123,7 +123,7 @@ export default function SearchTrigger() {
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setFocused(true)}
           placeholder="Buscar productos, marcas..."
-          className="w-full bg-surface-100 rounded-2xl pl-10 pr-9 py-3 text-sm text-gray-900 placeholder-surface-400 outline-none focus:bg-white focus:ring-2 focus:ring-primary-500/25 focus:border-primary-400 border border-transparent transition-all"
+          className="w-full bg-surface-100 rounded-2xl pl-10 pr-9 py-3 text-base text-gray-900 placeholder-surface-400 outline-none focus:bg-white focus:ring-2 focus:ring-primary-500/25 focus:border-primary-400 border border-transparent transition-all"
           autoComplete="off"
           enterKeyHint="search"
         />
