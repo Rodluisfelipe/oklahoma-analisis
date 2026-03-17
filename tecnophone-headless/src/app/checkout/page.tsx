@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -21,6 +21,8 @@ import {
   ArrowLeft,
   CheckCircle,
   Banknote,
+  Package,
+  Sparkles,
 } from 'lucide-react';
 import { useCartStore } from '@/store/cart';
 import { formatPrice } from '@/lib/woocommerce';
@@ -177,6 +179,73 @@ export default function CheckoutPage() {
     }
   };
 
+  /* ── Animated loading overlay messages ── */
+  const loadingMessages = [
+    { text: '¡Ya casi es tuyo! 🎉', sub: 'Preparando tu pedido...' },
+    { text: 'Verificando disponibilidad 📦', sub: 'Solo unos segundos más...' },
+    { text: 'Reservando tus productos ✨', sub: 'Nadie más podrá llevárselos...' },
+    { text: '¡Excelente elección! 🔥', sub: 'Creando tu orden de compra...' },
+    { text: 'Casi listo... 🚀', sub: 'Finalizando los últimos detalles...' },
+  ];
+
+  const LoadingOverlay = () => {
+    const [msgIdx, setMsgIdx] = useState(0);
+    const [progress, setProgress] = useState(0);
+    const intervalRef = useRef<ReturnType<typeof setInterval>>();
+    const progressRef = useRef<ReturnType<typeof setInterval>>();
+
+    useEffect(() => {
+      intervalRef.current = setInterval(() => {
+        setMsgIdx((prev) => (prev + 1) % loadingMessages.length);
+      }, 2400);
+      progressRef.current = setInterval(() => {
+        setProgress((prev) => (prev >= 90 ? 90 : prev + Math.random() * 8 + 2));
+      }, 500);
+      return () => {
+        clearInterval(intervalRef.current);
+        clearInterval(progressRef.current);
+      };
+    }, []);
+
+    const msg = loadingMessages[msgIdx];
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+        <div className="flex flex-col items-center gap-6 px-6 max-w-sm text-center">
+          {/* Animated icon */}
+          <div className="relative">
+            <div className="w-20 h-20 rounded-full bg-primary-500/10 flex items-center justify-center animate-pulse">
+              <Package className="w-10 h-10 text-primary-500" />
+            </div>
+            <Sparkles className="w-5 h-5 text-amber-400 absolute -top-1 -right-1 animate-bounce" />
+          </div>
+
+          {/* Message */}
+          <div
+            key={msgIdx}
+            className="animate-fade-in"
+          >
+            <p className="text-xl font-extrabold text-gray-900">{msg.text}</p>
+            <p className="text-sm text-surface-600 mt-1">{msg.sub}</p>
+          </div>
+
+          {/* Progress bar */}
+          <div className="w-64 h-2 bg-surface-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-primary-500 to-primary-400 rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+
+          {/* Trust line */}
+          <p className="text-xs text-surface-500 flex items-center gap-1.5">
+            <Lock className="w-3 h-3" /> Transacción segura y encriptada
+          </p>
+        </div>
+      </div>
+    );
+  };
+
   if (items.length === 0 && !loading) {
     return (
       <div className="container-custom py-16 text-center">
@@ -199,6 +268,9 @@ export default function CheckoutPage() {
 
   return (
     <div className="bg-white min-h-screen">
+      {/* Loading overlay with animated messages */}
+      {loading && <LoadingOverlay />}
+
       <div className="container-custom py-6 lg:py-10">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 text-sm text-surface-600 mb-6">
