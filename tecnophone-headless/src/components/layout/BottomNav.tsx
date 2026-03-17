@@ -11,7 +11,7 @@ import TrackingModal from '@/components/tracking/TrackingModal';
 
 const tabs = [
   { key: 'home', href: '/', icon: Home, label: 'Inicio' },
-  { key: 'categories', href: '/productos', icon: Grid3X3, label: 'Categorías' },
+  { key: 'categories', href: '/categorias', icon: Grid3X3, label: 'Categorías' },
   { key: 'cart', href: '#cart', icon: ShoppingCart, label: 'Carrito' },
   { key: 'tracking', href: '#tracking', icon: Truck, label: 'Rastrear' },
   { key: 'support', href: '#support', icon: null as unknown as typeof Home, label: 'Tecno IA' },
@@ -33,7 +33,7 @@ export default function BottomNav() {
 
   const isActive = (key: string) => {
     if (key === 'home') return pathname === '/';
-    if (key === 'categories') return pathname.startsWith('/productos') || pathname.startsWith('/categoria');
+    if (key === 'categories') return pathname.startsWith('/categorias') || pathname.startsWith('/productos') || pathname.startsWith('/categoria');
     if (key === 'support') return isChatOpen;
     return false;
   };
