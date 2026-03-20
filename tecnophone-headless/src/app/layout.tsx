@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter, Space_Grotesk } from 'next/font/google';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import dynamic from 'next/dynamic';
 import './globals.css';
 import Footer from '@/components/layout/Footer';
@@ -106,6 +107,7 @@ export default function RootLayout({
         <BottomNav />
         <AiChatBubble />
         <ToasterProvider />
+        <SpeedInsights />
       </body>
     </html>
   );

@@ -61,6 +61,62 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      // WordPress core paths
+      { source: '/wp-admin/:path*', destination: '/', permanent: true },
+      { source: '/wp-login.php', destination: '/', permanent: true },
+      { source: '/wp-content/:path*', destination: '/', permanent: true },
+      { source: '/wp-includes/:path*', destination: '/', permanent: true },
+      { source: '/wp-json/:path*', destination: '/', permanent: false },
+      { source: '/xmlrpc.php', destination: '/', permanent: true },
+      { source: '/wp-cron.php', destination: '/', permanent: true },
+      { source: '/wp-signup.php', destination: '/', permanent: true },
+      // WooCommerce old paths
+      { source: '/tienda', destination: '/productos', permanent: true },
+      { source: '/tienda/:path*', destination: '/productos', permanent: true },
+      { source: '/shop', destination: '/productos', permanent: true },
+      { source: '/shop/:path*', destination: '/productos', permanent: true },
+      { source: '/carrito', destination: '/', permanent: true },
+      { source: '/cart', destination: '/', permanent: true },
+      { source: '/mi-cuenta', destination: '/', permanent: true },
+      { source: '/mi-cuenta/:path*', destination: '/', permanent: true },
+      { source: '/my-account', destination: '/', permanent: true },
+      { source: '/my-account/:path*', destination: '/', permanent: true },
+      { source: '/finalizar-compra', destination: '/checkout', permanent: true },
+      // WooCommerce product category old patterns
+      { source: '/product-category/:slug*', destination: '/categorias', permanent: true },
+      { source: '/categoria-producto/:slug*', destination: '/categorias', permanent: true },
+      // WooCommerce single product old pattern
+      { source: '/product/:slug', destination: '/producto/:slug', permanent: true },
+      // WordPress feeds
+      { source: '/feed', destination: '/', permanent: true },
+      { source: '/feed/:path*', destination: '/', permanent: true },
+      { source: '/comments/feed', destination: '/', permanent: true },
+      // WordPress date-based archives
+      { source: '/2020/:path*', destination: '/', permanent: true },
+      { source: '/2021/:path*', destination: '/', permanent: true },
+      { source: '/2022/:path*', destination: '/', permanent: true },
+      { source: '/2023/:path*', destination: '/', permanent: true },
+      { source: '/2024/:path*', destination: '/', permanent: true },
+      { source: '/2025/:path*', destination: '/', permanent: true },
+      { source: '/2026/:path*', destination: '/', permanent: true },
+      // WordPress taxonomy pages
+      { source: '/category/:path*', destination: '/', permanent: true },
+      { source: '/tag/:path*', destination: '/', permanent: true },
+      { source: '/author/:path*', destination: '/', permanent: true },
+      // WordPress pagination
+      { source: '/page/:path*', destination: '/', permanent: true },
+      // WordPress search
+      { source: '/search/:path*', destination: '/buscar', permanent: true },
+      // Common WordPress pages
+      { source: '/sample-page', destination: '/', permanent: true },
+      { source: '/hello-world', destination: '/', permanent: true },
+      { source: '/politica-de-privacidad', destination: '/', permanent: true },
+      { source: '/privacy-policy', destination: '/', permanent: true },
+      { source: '/terms-and-conditions', destination: '/', permanent: true },
+      // Legacy attachment pages
+      { source: '/attachment/:path*', destination: '/', permanent: true },
+    ];
+  },
 };
-
-module.exports = nextConfig;
