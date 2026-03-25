@@ -320,7 +320,7 @@ export default async function DiaDeLaMadrePage() {
             </p>
             <h3 className="text-lg font-bold text-gray-900 mt-6">Envío gratis y entrega antes del Día de la Madre</h3>
             <p>
-              Realizamos envíos a toda Colombia con entrega en 1 a 3 días hábiles. Compra con anticipación para que tu regalo llegue a tiempo. Aceptamos todos los medios de pago: tarjeta de crédito, débito, transferencia bancaria y pago contra entrega en ciudades principales.
+              Realizamos envíos a toda Colombia con entrega en 1 a 3 días hábiles. Compra con anticipación para que tu regalo llegue a tiempo. Aceptamos todos los medios de pago: tarjeta de crédito, débito, Nequi y transferencia bancaria.
             </p>
           </div>
         </div>
