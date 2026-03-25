@@ -44,3 +44,22 @@ export interface AlgoliaProduct {
 export function isAlgoliaConfigured(): boolean {
   return !!(APP_ID && SEARCH_KEY);
 }
+
+/** Check if Algolia admin (write) is configured */
+export function isAlgoliaAdminConfigured(): boolean {
+  return !!(APP_ID && ADMIN_KEY);
+}
+
+/** Save or update a single product in Algolia */
+export async function saveProduct(product: AlgoliaProduct): Promise<void> {
+  if (!isAlgoliaAdminConfigured()) return;
+  const client = getAdminClient();
+  await client.saveObjects({ indexName: INDEX_NAME, objects: [product as unknown as Record<string, unknown>] });
+}
+
+/** Delete a product from Algolia by objectID */
+export async function deleteProductFromAlgolia(productId: number): Promise<void> {
+  if (!isAlgoliaAdminConfigured()) return;
+  const client = getAdminClient();
+  await client.deleteObjects({ indexName: INDEX_NAME, objectIDs: [String(productId)] });
+}
