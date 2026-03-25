@@ -18,6 +18,7 @@ const VALID_PREFIXES = [
   '/contacto',
   '/empresas',
   '/dolar-hoy',
+  '/salario-minimo',
   '/blog',
   '/api/',
   '/_next/',
