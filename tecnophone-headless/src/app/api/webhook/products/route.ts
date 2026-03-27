@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
     }
 
     // product.created or product.updated
-    const wcProduct = body as WCWebhookProduct;
+    const wcProduct = body as unknown as WCWebhookProduct;
 
     // Only index published products
     if (wcProduct.status !== 'publish') {
