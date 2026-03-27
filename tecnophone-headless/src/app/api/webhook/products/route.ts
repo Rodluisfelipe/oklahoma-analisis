@@ -105,32 +105,38 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
   }
 
+  // Auth method 1: HMAC signature in header (standard WooCommerce webhook signing)
+  // Auth method 2: Secret as ?secret= query param in delivery URL (fallback when WC UI doesn't save the secret)
+  const urlSecret = request.nextUrl.searchParams.get('secret') || '';
+  let authenticated = false;
+
   if (signature) {
     const expectedSig = createHmac('sha256', WEBHOOK_SECRET)
       .update(Buffer.from(rawBuffer))
       .digest('base64');
     const expectedBuf = Buffer.from(expectedSig, 'utf8');
     const receivedBuf = Buffer.from(signature, 'utf8');
-    if (expectedBuf.length !== receivedBuf.length || !timingSafeEqual(expectedBuf, receivedBuf)) {
+    if (expectedBuf.length === receivedBuf.length && timingSafeEqual(expectedBuf, receivedBuf)) {
+      authenticated = true;
+    } else {
       console.error(`[WC Webhook] Signature mismatch — secret_len=${WEBHOOK_SECRET.length}, received="${signature.slice(0, 12)}…", expected="${expectedSig.slice(0, 12)}…", body_len=${rawBuffer.byteLength}`);
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
-  } else {
-    // WooCommerce only sends the signature header when the webhook has a secret configured.
-    // If this fires, the webhook in WP Admin → WooCommerce → Webhooks is missing its secret.
-    console.error(
-      `[WC Webhook] Missing x-wc-webhook-signature header. ` +
-      `This means the webhook in WooCommerce (id=${webhookId}) does NOT have a secret configured. ` +
-      `Go to WP Admin → WooCommerce → Settings → Advanced → Webhooks → edit webhook #${webhookId} → ` +
-      `paste the secret and save.`
-    );
-    return NextResponse.json(
-      {
-        error: 'Missing signature',
-        fix: 'The WooCommerce webhook does not have a secret configured. Edit the webhook in WP Admin → WooCommerce → Settings → Advanced → Webhooks and paste the secret into the Secret field.',
-      },
-      { status: 401 }
-    );
+  }
+
+  if (!authenticated && urlSecret) {
+    // Timing-safe comparison of URL token vs env secret
+    const expectedBuf = Buffer.from(WEBHOOK_SECRET, 'utf8');
+    const receivedBuf = Buffer.from(urlSecret, 'utf8');
+    if (expectedBuf.length === receivedBuf.length && timingSafeEqual(expectedBuf, receivedBuf)) {
+      authenticated = true;
+    } else {
+      console.error('[WC Webhook] URL secret mismatch');
+    }
+  }
+
+  if (!authenticated) {
+    console.error(`[WC Webhook] Authentication failed — no valid HMAC signature and no valid URL secret`);
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
