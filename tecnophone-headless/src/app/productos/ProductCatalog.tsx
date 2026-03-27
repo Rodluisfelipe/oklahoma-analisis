@@ -27,12 +27,15 @@ const priceRanges = [
 
 /** Human-friendly labels for attribute facets */
 const ATTR_LABELS: Record<string, string> = {
-  attr_ram: 'Memoria RAM',
+  attr_ram: 'RAM',
   attr_almacenamiento: 'Almacenamiento',
   attr_pantalla: 'Pantalla',
   attr_procesador: 'Procesador',
   attr_tipo: 'Tipo',
   attr_marca: 'Marca',
+  'attr_memoria-ram': 'Memoria RAM',
+  'attr_color': 'Color',
+  'attr_tamano': 'Tamaño',
 };
 
 interface ProductCatalogProps {

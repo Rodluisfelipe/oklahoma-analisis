@@ -71,8 +71,9 @@ function extractAttributes(attrs?: { name: string; options: string[]; visible: b
   const result: Record<string, string> = {};
   for (const attr of attrs) {
     if (!attr.visible || !attr.options?.length) continue;
-    // Normalize name to a slug: "Memoria RAM" → "attr_memoria-ram"
-    const key = `attr_${attr.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`;
+    // Normalize: strip pa_ prefix, lowercase, slugify
+    const slug = attr.name.toLowerCase().replace(/^pa_/, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const key = `attr_${slug}`;
     result[key] = attr.options.join(', ');
   }
   return result;

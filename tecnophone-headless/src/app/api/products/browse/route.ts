@@ -40,12 +40,8 @@ export async function GET(request: NextRequest) {
   if (minPrice !== undefined) numericFilters.push(`price_numeric >= ${minPrice}`);
   if (maxPrice !== undefined) numericFilters.push(`price_numeric <= ${maxPrice}`);
 
-  // Facets to retrieve (all known attribute facets + base facets)
-  const facets = [
-    'categories', 'brand_name', 'on_sale', 'stock_status', 'category_names',
-    'attr_ram', 'attr_almacenamiento', 'attr_pantalla', 'attr_procesador',
-    'attr_tipo', 'attr_marca',
-  ];
+  // Facets to retrieve — use wildcard to get all attr_* dynamically
+  const facets = ['*'];
 
   try {
     const client = getSearchClient();

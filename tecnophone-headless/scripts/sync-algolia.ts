@@ -132,7 +132,9 @@ function extractAttributes(attrs?: { name: string; options: string[]; visible: b
   const result: Record<string, string> = {};
   for (const attr of attrs) {
     if (!attr.visible || !attr.options?.length) continue;
-    const key = `attr_${attr.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`;
+    // Normalize: strip pa_ prefix, lowercase, slugify
+    const slug = attr.name.toLowerCase().replace(/^pa_/, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const key = `attr_${slug}`;
     result[key] = attr.options.join(', ');
   }
   return result;
@@ -216,9 +218,10 @@ async function main() {
       attributesForFaceting: [
         'categories', 'brand_name', 'on_sale', 'stock_status',
         'filterOnly(price_numeric)',
-        'searchable(attr_ram)', 'searchable(attr_almacenamiento)',
+        'searchable(attr_memoria-ram)', 'searchable(attr_almacenamiento)',
         'searchable(attr_pantalla)', 'searchable(attr_procesador)',
         'searchable(attr_tipo)', 'searchable(attr_marca)',
+        'searchable(attr_ram)', 'searchable(attr_color)',
         'searchable(category_names)',
       ],
       customRanking: ['desc(featured)', 'desc(on_sale)'],

@@ -38,13 +38,13 @@ export interface AlgoliaProduct {
   short_description: string;
   featured: boolean;
   price_numeric: number;
-  // Product attributes for faceted filtering
+  // Product attributes for faceted filtering (dynamic, prefixed attr_)
   attr_ram?: string;
   attr_almacenamiento?: string;
   attr_pantalla?: string;
   attr_procesador?: string;
   attr_tipo?: string;
-  /** Catch-all: stores all attribute values as flat key-value for dynamic faceting */
+  /** WooCommerce global attributes use pa_ prefix slugs like "memoria-ram" */
   [key: `attr_${string}`]: string | undefined;
 }
 
