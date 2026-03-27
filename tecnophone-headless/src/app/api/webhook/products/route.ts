@@ -140,10 +140,29 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = JSON.parse(rawBody);
+    // WooCommerce may send pings as form-encoded (webhook_id=12) or JSON
+    let body: Record<string, unknown>;
+    const contentType = request.headers.get('content-type') || '';
 
-    // WooCommerce sends a ping on webhook creation
-    if (topic === 'product.ping' || !body?.id) {
+    if (rawBody.startsWith('{')) {
+      body = JSON.parse(rawBody);
+    } else if (rawBody.includes('=')) {
+      // Form-encoded: parse "webhook_id=12" → { webhook_id: "12" }
+      body = Object.fromEntries(new URLSearchParams(rawBody));
+    } else {
+      body = {};
+    }
+
+    console.log(`[WC Webhook] Parsed body: content_type=${contentType}, topic=${topic}, body_keys=${Object.keys(body).join(',')}, id=${body.id || body.webhook_id || 'none'}`);
+
+    // WooCommerce sends a ping on webhook creation/save
+    if (topic === 'product.ping' || (!body?.id && !topic)) {
+      console.log(`[WC Webhook] Ping received — webhook is working ✓`);
+      return NextResponse.json({ status: 'pong' });
+    }
+
+    if (!body?.id) {
+      console.log(`[WC Webhook] No product id in payload — treating as ping`);
       return NextResponse.json({ status: 'pong' });
     }
 
