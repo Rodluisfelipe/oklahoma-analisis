@@ -41,6 +41,7 @@ const SYNC_QUERY = `
           averageRating reviewCount
           image { sourceUrl altText }
           productCategories { nodes { name slug } }
+          attributes { nodes { name options visible } }
         }
         ... on VariableProduct {
           databaseId name slug sku type featured
@@ -49,6 +50,7 @@ const SYNC_QUERY = `
           averageRating reviewCount
           image { sourceUrl altText }
           productCategories { nodes { name slug } }
+          attributes { nodes { name options visible } }
         }
         ... on ExternalProduct {
           databaseId name slug type onSale
@@ -78,6 +80,7 @@ interface GQLNode {
   reviewCount?: number;
   image?: { sourceUrl: string; altText: string } | null;
   productCategories?: { nodes: { name: string; slug: string }[] };
+  attributes?: { nodes: { name: string; options: string[]; visible: boolean }[] };
 }
 
 // ── Fetch brands via REST ──
@@ -122,6 +125,17 @@ async function gqlFetch(query: string, variables: Record<string, unknown>) {
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ').trim();
+}
+
+function extractAttributes(attrs?: { name: string; options: string[]; visible: boolean }[]): Record<string, string> {
+  if (!attrs?.length) return {};
+  const result: Record<string, string> = {};
+  for (const attr of attrs) {
+    if (!attr.visible || !attr.options?.length) continue;
+    const key = `attr_${attr.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`;
+    result[key] = attr.options.join(', ');
+  }
+  return result;
 }
 
 // ── Main ──
@@ -179,6 +193,7 @@ async function main() {
         short_description: stripHtml(n.shortDescription || ''),
         featured: n.featured || false,
         price_numeric: priceNum,
+        ...extractAttributes(n.attributes?.nodes),
       });
     }
 
@@ -198,7 +213,14 @@ async function main() {
     indexName: INDEX,
     indexSettings: {
       searchableAttributes: ['name', 'brand_name', 'category_names', 'short_description', 'sku'],
-      attributesForFaceting: ['categories', 'brand_name', 'on_sale', 'stock_status'],
+      attributesForFaceting: [
+        'categories', 'brand_name', 'on_sale', 'stock_status',
+        'filterOnly(price_numeric)',
+        'searchable(attr_ram)', 'searchable(attr_almacenamiento)',
+        'searchable(attr_pantalla)', 'searchable(attr_procesador)',
+        'searchable(attr_tipo)', 'searchable(attr_marca)',
+        'searchable(category_names)',
+      ],
       customRanking: ['desc(featured)', 'desc(on_sale)'],
       typoTolerance: true,
       minWordSizefor1Typo: 3,

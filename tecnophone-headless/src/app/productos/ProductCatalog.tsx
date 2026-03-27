@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { SlidersHorizontal, Grid3X3, LayoutList, ChevronDown, X, Filter, DollarSign, Tag } from 'lucide-react';
+import { SlidersHorizontal, Grid3X3, LayoutList, ChevronDown, X, Filter, DollarSign, Tag, Cpu } from 'lucide-react';
 import ProductCard from '@/components/products/ProductCard';
 import { WCProduct } from '@/types/woocommerce';
 import { cn } from '@/lib/utils';
@@ -25,6 +25,16 @@ const priceRanges = [
   { label: 'Más de $5.000.000', min: '5000000', max: '' },
 ];
 
+/** Human-friendly labels for attribute facets */
+const ATTR_LABELS: Record<string, string> = {
+  attr_ram: 'Memoria RAM',
+  attr_almacenamiento: 'Almacenamiento',
+  attr_pantalla: 'Pantalla',
+  attr_procesador: 'Procesador',
+  attr_tipo: 'Tipo',
+  attr_marca: 'Marca',
+};
+
 interface ProductCatalogProps {
   initialProducts: WCProduct[];
   initialTotal: number;
@@ -46,6 +56,8 @@ export default function ProductCatalog({
   const [total, setTotal] = useState(initialTotal);
   const [gridCols, setGridCols] = useState<2 | 3 | 4>(4);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  // Facet values returned by Algolia { attr_ram: { "8GB": 5, "12GB": 3 }, ... }
+  const [facets, setFacets] = useState<Record<string, Record<string, number>>>({});
 
   const page = parseInt(searchParams.get('page') || '1');
   const sort = searchParams.get('sort') || 'date-desc';
@@ -53,42 +65,93 @@ export default function ProductCatalog({
   const minPrice = searchParams.get('min_price') || '';
   const maxPrice = searchParams.get('max_price') || '';
 
+  // Collect active attribute filters from URL
+  const activeAttrs = useMemo(() => {
+    const map: Record<string, string> = {};
+    searchParams.forEach((value, key) => {
+      if (key.startsWith('attr_') && value) map[key] = value;
+    });
+    return map;
+  }, [searchParams]);
+
+  const hasAttrFilters = Object.keys(activeAttrs).length > 0;
+
+  // When attribute filters are active, use Algolia browse API; otherwise use WC API
+  const useAlgolia = hasAttrFilters;
+
   // Track if user has changed from the initial SSR state
-  const isInitialState = page === 1 && sort === 'date-desc' && !onSale && !minPrice && !maxPrice;
+  const isInitialState = page === 1 && sort === 'date-desc' && !onSale && !minPrice && !maxPrice && !hasAttrFilters;
 
   const fetchProducts = useCallback(async () => {
-    // Skip fetch if showing initial SSR data
+    // Skip fetch if showing initial SSR data (and load facets in background)
     if (isInitialState) {
       setProducts(initialProducts);
       setTotal(initialTotal);
       setTotalPages(initialTotalPages);
+      // Still fetch facets from Algolia for filter dropdowns
+      try {
+        const res = await fetch('/api/products/browse?per_page=0');
+        const data = await res.json();
+        if (data.facets) setFacets(data.facets);
+      } catch { /* non-critical */ }
       return;
     }
 
     setLoading(true);
-    const [orderby, order] = sort.split('-');
 
-    const params = new URLSearchParams();
-    params.set('page', String(page));
-    params.set('per_page', '12');
-    params.set('orderby', orderby);
-    params.set('order', order);
-    if (onSale) params.set('on_sale', 'true');
-    if (minPrice) params.set('min_price', minPrice);
-    if (maxPrice) params.set('max_price', maxPrice);
+    if (useAlgolia) {
+      // Use Algolia browse API with facets
+      const params = new URLSearchParams();
+      params.set('page', String(Math.max(0, page - 1))); // Algolia is 0-based
+      params.set('per_page', '24');
+      if (onSale) params.set('on_sale', 'true');
+      if (minPrice) params.set('min_price', minPrice);
+      if (maxPrice) params.set('max_price', maxPrice);
+      for (const [key, value] of Object.entries(activeAttrs)) {
+        params.set(key, value);
+      }
+      try {
+        const res = await fetch(`/api/products/browse?${params.toString()}`);
+        const data = await res.json();
+        setProducts(data.products || []);
+        setTotalPages(data.totalPages || 0);
+        setTotal(data.total || 0);
+        if (data.facets) setFacets(data.facets);
+      } catch {
+        setProducts([]);
+      }
+    } else {
+      // Use WooCommerce API
+      const [orderby, order] = sort.split('-');
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('per_page', '12');
+      params.set('orderby', orderby);
+      params.set('order', order);
+      if (onSale) params.set('on_sale', 'true');
+      if (minPrice) params.set('min_price', minPrice);
+      if (maxPrice) params.set('max_price', maxPrice);
 
-    try {
-      const res = await fetch(`/api/products?${params.toString()}`);
-      const data = await res.json();
-      setProducts(data.products);
-      setTotalPages(data.totalPages);
-      setTotal(data.total);
-    } catch {
-      setProducts([]);
-    } finally {
-      setLoading(false);
+      try {
+        const res = await fetch(`/api/products?${params.toString()}`);
+        const data = await res.json();
+        setProducts(data.products);
+        setTotalPages(data.totalPages);
+        setTotal(data.total);
+      } catch {
+        setProducts([]);
+      }
+
+      // Also fetch facets from Algolia for filter dropdowns
+      try {
+        const fRes = await fetch('/api/products/browse?per_page=0');
+        const fData = await fRes.json();
+        if (fData.facets) setFacets(fData.facets);
+      } catch { /* non-critical */ }
     }
-  }, [page, sort, onSale, minPrice, maxPrice, isInitialState, initialProducts, initialTotal, initialTotalPages]);
+
+    setLoading(false);
+  }, [page, sort, onSale, minPrice, maxPrice, isInitialState, initialProducts, initialTotal, initialTotalPages, useAlgolia, activeAttrs]);
 
   useEffect(() => {
     fetchProducts();
@@ -105,7 +168,7 @@ export default function ProductCatalog({
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const activeFiltersCount = (onSale ? 1 : 0) + (minPrice || maxPrice ? 1 : 0);
+  const activeFiltersCount = (onSale ? 1 : 0) + (minPrice || maxPrice ? 1 : 0) + Object.keys(activeAttrs).length;
 
   const clearAllFilters = () => {
     const params = new URLSearchParams();
@@ -113,6 +176,17 @@ export default function ProductCatalog({
     if (sort !== 'date-desc') params.set('sort', sort);
     router.push(`${pathname}?${params.toString()}`);
   };
+
+  /** Available attribute facets (only those with values) */
+  const attrFacets = useMemo(() => {
+    return Object.entries(facets)
+      .filter(([key, values]) => key.startsWith('attr_') && Object.keys(values).length > 0)
+      .map(([key, values]) => ({
+        key,
+        label: ATTR_LABELS[key] || key.replace('attr_', '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+        options: Object.entries(values).sort(([a], [b]) => a.localeCompare(b, 'es', { numeric: true })),
+      }));
+  }, [facets]);
 
   return (
     <div className="container-custom py-8 lg:py-12">
@@ -249,6 +323,30 @@ export default function ProductCatalog({
                 🔥 Solo ofertas
               </button>
             </div>
+
+            {/* Attribute facet dropdowns */}
+            {attrFacets.map((facet) => (
+              <div key={facet.key}>
+                <p className="text-xs font-semibold text-surface-700 mb-2 flex items-center gap-1">
+                  <Cpu className="w-3 h-3" /> {facet.label}
+                </p>
+                <div className="relative">
+                  <select
+                    value={activeAttrs[facet.key] || ''}
+                    onChange={(e) => updateParam(facet.key, e.target.value)}
+                    className="appearance-none bg-white border border-surface-300 rounded-lg pl-3 pr-8 py-1.5 text-xs text-gray-700 focus:border-primary-500 focus:outline-none cursor-pointer min-w-[130px]"
+                  >
+                    <option value="">Todos</option>
+                    {facet.options.map(([value, count]) => (
+                      <option key={value} value={value}>
+                        {value} ({count})
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-surface-600 pointer-events-none" />
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Active filter chips */}
@@ -272,6 +370,12 @@ export default function ProductCatalog({
                   }}><X className="w-3 h-3" /></button>
                 </span>
               )}
+              {Object.entries(activeAttrs).map(([key, value]) => (
+                <span key={key} className="flex items-center gap-1.5 bg-indigo-500/10 text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-medium">
+                  {ATTR_LABELS[key] || key.replace('attr_', '')}: {value}
+                  <button onClick={() => updateParam(key, '')}><X className="w-3 h-3" /></button>
+                </span>
+              ))}
             </div>
           )}
         </div>

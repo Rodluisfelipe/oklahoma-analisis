@@ -31,6 +31,7 @@ interface WCWebhookProduct {
   categories: { id: number; name: string; slug: string }[];
   images: { id: number; src: string; alt: string }[];
   brands?: { id: number; name: string; image?: { src: string } }[];
+  attributes: { name: string; options: string[]; visible: boolean }[];
   average_rating: string;
   rating_count: number;
 }
@@ -60,7 +61,21 @@ function mapToAlgoliaProduct(wc: WCWebhookProduct): AlgoliaProduct {
     short_description: (wc.short_description || '').replace(/<[^>]*>/g, '').trim(),
     featured: wc.featured,
     price_numeric: priceNum,
+    ...extractAttributes(wc.attributes),
   };
+}
+
+/** Extract product attributes into flat attr_* fields for Algolia faceting */
+function extractAttributes(attrs?: { name: string; options: string[]; visible: boolean }[]): Record<string, string> {
+  if (!attrs?.length) return {};
+  const result: Record<string, string> = {};
+  for (const attr of attrs) {
+    if (!attr.visible || !attr.options?.length) continue;
+    // Normalize name to a slug: "Memoria RAM" → "attr_memoria-ram"
+    const key = `attr_${attr.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`;
+    result[key] = attr.options.join(', ');
+  }
+  return result;
 }
 
 /** Revalidate all pages that display products */

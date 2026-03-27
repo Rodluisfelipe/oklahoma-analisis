@@ -38,6 +38,14 @@ export interface AlgoliaProduct {
   short_description: string;
   featured: boolean;
   price_numeric: number;
+  // Product attributes for faceted filtering
+  attr_ram?: string;
+  attr_almacenamiento?: string;
+  attr_pantalla?: string;
+  attr_procesador?: string;
+  attr_tipo?: string;
+  /** Catch-all: stores all attribute values as flat key-value for dynamic faceting */
+  [key: `attr_${string}`]: string | undefined;
 }
 
 /** Check if Algolia is configured */
