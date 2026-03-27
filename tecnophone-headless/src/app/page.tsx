@@ -168,13 +168,11 @@ export default async function HomePage() {
       {/* Visually hidden H1 for SEO — page has visual hero slider instead */}
       <h1 className="sr-only">TecnoPhone — Portátiles, Celulares y Accesorios de Tecnología en Colombia al Mejor Precio</h1>
 
-      {/* SEO intro text — visible but compact */}
-      <div className="bg-white border-b border-surface-200">
-        <div className="px-4 sm:px-6 lg:px-8 max-w-[1550px] mx-auto py-3 lg:py-4">
-          <p className="text-xs lg:text-sm text-surface-600 leading-relaxed max-w-3xl">
-            Bienvenido a <strong>TecnoPhone</strong>, tu tienda de tecnología en Colombia. Encuentra <strong>portátiles</strong>, <strong>celulares</strong>, monitores, auriculares y <strong>accesorios</strong> de las mejores marcas al mejor precio con envío a todo el país.
-          </p>
-        </div>
+      {/* SEO intro text — visually hidden but crawlable (not sr-only, uses clip for SEO safety) */}
+      <div className="absolute overflow-hidden" style={{ width: 1, height: 1, padding: 0, margin: -1, clip: 'rect(0,0,0,0)', border: 0 }}>
+        <p>
+          Bienvenido a TecnoPhone, tu tienda de tecnología en Colombia. Encuentra portátiles, celulares, monitores, auriculares y accesorios de las mejores marcas al mejor precio con envío a todo el país.
+        </p>
       </div>
 
       {/* ===== HERO SLIDER ===== */}
