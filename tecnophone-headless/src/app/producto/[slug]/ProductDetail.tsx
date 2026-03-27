@@ -59,7 +59,32 @@ export default function ProductDetail({ product, relatedProducts }: Props) {
   const discount = calculateDiscount(product.regular_price, product.sale_price);
   const price = parseFloat(product.price);
   const monthlyPrice = price > 0 ? Math.round(price / 12) : 0;
-  const inStock = product.stock_status !== 'outofstock';
+  const [inStock, setInStock] = useState(product.stock_status !== 'outofstock');
+
+  // Poll stock every 60s so the UI updates if a product sells out while the user is browsing
+  useEffect(() => {
+    if (product.type === 'external') return;
+    const check = () => {
+      fetch('/api/stock-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: [{ product_id: product.id, quantity: 1 }] }),
+      })
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => {
+          if (!data) return;
+          const wasInStock = inStock;
+          const nowInStock = data.valid === true;
+          setInStock(nowInStock);
+          if (wasInStock && !nowInStock) {
+            toast.error('Este producto se acaba de agotar');
+          }
+        })
+        .catch(() => {});
+    };
+    const id = setInterval(check, 60_000);
+    return () => clearInterval(id);
+  }, [product.id, product.type, inStock]);
   const isFull = product.categories?.some((c) => c.slug === 'full');
   const displayCategory = product.categories?.find((c) => !['full', 'sin-categorizar', 'uncategorized'].includes(c.slug));
 
