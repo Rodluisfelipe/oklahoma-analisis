@@ -286,7 +286,7 @@ export default function ProductDetail({ product, relatedProducts }: Props) {
                   src={product.images[selectedImage].src}
                   alt={product.images[selectedImage].alt || product.name}
                   fill
-                  className="object-contain p-6 lg:p-10 transition-transform duration-500 group-hover:scale-105"
+                  className="object-contain p-3 lg:p-4 transition-transform duration-500 group-hover:scale-105"
                   sizes="(max-width: 1024px) 100vw, 58vw"
                   priority
                 />
