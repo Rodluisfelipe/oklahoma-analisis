@@ -275,7 +275,7 @@ export default function ProductDetail({ product, relatedProducts }: Props) {
         <div className="grid lg:grid-cols-12 gap-6 lg:gap-10">
 
           {/* LEFT COLUMN: Gallery (7 cols) - Sticky on desktop */}
-          <div className="lg:col-span-7 space-y-4 lg:sticky lg:top-24 lg:self-start">
+          <div className="lg:col-span-7 space-y-4 lg:sticky lg:top-24 lg:self-start min-w-0">
             {/* Main image */}
             <div
               className="relative aspect-[4/3] bg-surface-50 rounded-2xl overflow-hidden border border-surface-200 group cursor-zoom-in"
@@ -340,18 +340,19 @@ export default function ProductDetail({ product, relatedProducts }: Props) {
 
             {/* Thumbnails strip */}
             {product.images.length > 1 && (
-              <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
-                {product.images.map((img, i) => (
-                  <button
-                    key={img.id}
-                    onClick={() => setSelectedImage(i)}
-                    className={cn(
-                      'relative w-[72px] h-[72px] rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all',
-                      selectedImage === i
-                        ? 'border-primary-500 shadow-md shadow-primary-500/20'
-                        : 'border-surface-300 hover:border-surface-400'
-                    )}
-                  >
+              <div className="overflow-hidden w-full">
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none" style={{ scrollbarWidth: 'none' }}>
+                  {product.images.map((img, i) => (
+                    <button
+                      key={img.id}
+                      onClick={() => setSelectedImage(i)}
+                      className={cn(
+                        'relative w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all',
+                        selectedImage === i
+                          ? 'border-primary-500 shadow-md shadow-primary-500/20'
+                          : 'border-surface-300 hover:border-surface-400'
+                      )}
+                    >
                     <Image
                       src={img.src}
                       alt={img.alt || `Miniatura ${i + 1}`}
@@ -364,6 +365,7 @@ export default function ProductDetail({ product, relatedProducts }: Props) {
                     )}
                   </button>
                 ))}
+              </div>
               </div>
             )}
           </div>
