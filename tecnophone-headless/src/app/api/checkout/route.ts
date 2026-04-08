@@ -6,11 +6,6 @@ const WP_URL = process.env.NEXT_PUBLIC_WORDPRESS_URL || 'https://wp.tecnophone.c
 const CK = process.env.WC_CONSUMER_KEY;
 const CS = process.env.WC_CONSUMER_SECRET;
 
-// LiteSpeed blocks /wp-json/ paths → use ?rest_route= format
-function storeApiUrl(path: string): string {
-  return `${WP_URL}/?rest_route=/wc/store/v1${path}`;
-}
-
 // Colombian department name → WooCommerce state code mapping
 const STATE_MAP: Record<string, string> = {
   'Amazonas': 'CO-AMA', 'Antioquia': 'CO-ANT', 'Arauca': 'CO-ARA',
@@ -62,117 +57,7 @@ interface CheckoutBody {
   payment_method?: 'mercadopago' | 'bacs';
 }
 
-/* ─── Store API checkout (fast path) ─── */
-async function storeApiCheckout(body: CheckoutBody): Promise<NextResponse | null> {
-  const isBacs = body.payment_method === 'bacs';
-
-  try {
-    // Step 1: GET cart to obtain nonce + cart token
-    const cartRes = await fetch(storeApiUrl('/cart'));
-    if (!cartRes.ok) return null;
-
-    const nonce = cartRes.headers.get('nonce') || '';
-    let cartToken = cartRes.headers.get('cart-token') || '';
-    if (!nonce || !cartToken) return null;
-
-    // Step 2: Add items to cart (sequential to avoid race conditions)
-    let cartTotal = '0';
-
-    for (const item of body.line_items) {
-      const itemId = item.variation_id || item.product_id;
-      const res = await fetch(storeApiUrl('/cart/add-item'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cart-Token': cartToken,
-          'Nonce': nonce,
-        },
-        body: JSON.stringify({ id: itemId, quantity: item.quantity }),
-      });
-
-      if (!res.ok) {
-        if (res.status === 404 || res.status === 401 || res.status === 403) {
-          return null;
-        }
-        const err = await res.json().catch(() => ({}));
-        return NextResponse.json(
-          { error: err.message || 'Producto no disponible' },
-          { status: 409 }
-        );
-      }
-
-      // Update cart token if returned and capture total
-      const newToken = res.headers.get('cart-token');
-      if (newToken) cartToken = newToken;
-
-      const cartData = await res.json();
-      cartTotal = cartData.totals?.total_price || cartTotal;
-    }
-
-    // Step 3: Process checkout in one call
-    const billingAddress = {
-      first_name: body.billing.first_name,
-      last_name: body.billing.last_name,
-      email: body.billing.email,
-      phone: body.billing.phone,
-      address_1: body.billing.address_1,
-      city: body.billing.city,
-      state: toStateCode(body.billing.state),
-      country: body.billing.country || 'CO',
-    };
-
-    const shippingAddress = body.shipping
-      ? {
-          first_name: body.shipping.first_name,
-          last_name: body.shipping.last_name,
-          address_1: body.shipping.address_1,
-          city: body.shipping.city,
-          state: toStateCode(body.shipping.state),
-          country: body.shipping.country || 'CO',
-        }
-      : billingAddress;
-
-    const checkoutRes = await fetch(storeApiUrl('/checkout'), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cart-Token': cartToken,
-        'Nonce': nonce,
-      },
-      body: JSON.stringify({
-        billing_address: billingAddress,
-        shipping_address: shippingAddress,
-        payment_method: isBacs ? 'bacs' : 'woo-mercado-pago-basic',
-        customer_note: body.customer_note || '',
-      }),
-    });
-
-    if (!checkoutRes.ok) {
-      if (checkoutRes.status === 404 || checkoutRes.status === 401) return null;
-      const err = await checkoutRes.json().catch(() => ({}));
-      console.error('[Checkout][StoreAPI] Error:', checkoutRes.status, err);
-      return NextResponse.json(
-        { error: err.message || 'Error al procesar el pedido' },
-        { status: checkoutRes.status >= 400 && checkoutRes.status < 500 ? checkoutRes.status : 500 }
-      );
-    }
-
-    const order = await checkoutRes.json();
-    console.log(`[Checkout][StoreAPI] Order #${order.order_id} created`);
-
-    return NextResponse.json({
-      order_id: order.order_id,
-      order_key: order.order_key,
-      total: cartTotal,
-      payment_method: isBacs ? 'bacs' : 'mercadopago',
-    });
-  } catch (error) {
-    console.error('[Checkout][StoreAPI] Exception:', error);
-    return null;
-  }
-}
-
-/* ─── REST API checkout (fallback) ─── */
+/* ─── REST API checkout ─── */
 async function restApiCheckout(body: CheckoutBody): Promise<NextResponse> {
   const isBacs = body.payment_method === 'bacs';
 
@@ -294,11 +179,8 @@ export async function POST(request: NextRequest) {
       body.shipping.state = truncate(stripHtml(body.shipping.state || ''), 100);
     }
 
-    // Try Store API first (2-4x faster), fall back to REST API
-    const storeResult = await storeApiCheckout(body);
-    if (storeResult) return storeResult;
-
-    console.log('[Checkout] Store API unavailable, using REST API fallback');
+    // Use REST API directly — Store API requires browser session/nonce
+    // and is unreliable from server-side (Vercel serverless)
     return await restApiCheckout(body);
   } catch (error) {
     console.error('[Checkout] Error:', error);
