@@ -103,10 +103,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Error de configuración del servidor' }, { status: 500 });
       }
 
-      const authHeader = 'Basic ' + Buffer.from(`${CK}:${CS}`).toString('base64');
-      const orderRes = await fetch(`${WP_URL}/wp-json/wc/v3/orders/${body.order_id}`, {
-        headers: { Authorization: authHeader },
-      });
+      const orderRes = await fetch(
+        `${WP_URL}/?rest_route=/wc/v3/orders/${body.order_id}&consumer_key=${CK}&consumer_secret=${CS}`
+      );
 
       if (!orderRes.ok) {
         console.error(`[Payments] Order verification failed: ${orderRes.status}`);
@@ -183,19 +182,18 @@ async function updateWCOrderStatus(
   if (!CK || !CS) return;
 
   try {
-    const authHeader = 'Basic ' + Buffer.from(`${CK}:${CS}`).toString('base64');
-    await fetch(`${WP_URL}/wp-json/wc/v3/orders/${orderId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: authHeader,
-      },
-      body: JSON.stringify({
-        status,
-        set_paid: status === 'processing',
-        transaction_id: paymentId || '',
-      }),
-    });
+    await fetch(
+      `${WP_URL}/?rest_route=/wc/v3/orders/${orderId}&consumer_key=${CK}&consumer_secret=${CS}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status,
+          set_paid: status === 'processing',
+          transaction_id: paymentId || '',
+        }),
+      }
+    );
   } catch (err) {
     console.error('[Payments] Failed to update WC order:', err);
   }

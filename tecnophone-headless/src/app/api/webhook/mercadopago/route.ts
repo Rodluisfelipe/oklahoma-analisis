@@ -162,20 +162,18 @@ async function updateWCOrderStatus(
     return;
   }
 
-  const authHeader = 'Basic ' + Buffer.from(`${CK}:${CS}`).toString('base64');
-
-  const res = await fetch(`${WP_URL}/wp-json/wc/v3/orders/${orderId}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: authHeader,
-    },
-    body: JSON.stringify({
-      status,
-      set_paid: setPaid,
-      transaction_id: paymentId,
-    }),
-  });
+  const res = await fetch(
+    `${WP_URL}/?rest_route=/wc/v3/orders/${orderId}&consumer_key=${CK}&consumer_secret=${CS}`,
+    {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status,
+        set_paid: setPaid,
+        transaction_id: paymentId,
+      }),
+    }
+  );
 
   if (!res.ok) {
     const errBody = await res.text().catch(() => '');
